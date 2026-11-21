@@ -145,6 +145,10 @@ label.check{flex-direction:row;align-items:center;gap:8px;color:var(--ink)}
 .ai-text ul{margin:4px 0 8px;padding-left:20px}
 .disclaimer{font-size:12px;color:var(--muted)}
 .busy{opacity:.6;pointer-events:none}
+.overlay.busy{opacity:1;pointer-events:auto}
+.overlay.busy .modal{pointer-events:none}
+.overlay.busy .bar span{animation:cargando 1.2s ease-in-out infinite;width:40%!important;opacity:1!important}
+@keyframes cargando{0%{margin-left:-40%}100%{margin-left:100%}}
 @media (prefers-reduced-motion:no-preference){.alert,.card{transition:border-color .2s}}
 
 /* ===== Vista de app: colores y componentes amigables ===== */
@@ -616,7 +620,17 @@ window.STANDALONE=true;
   sample.json=async(prompt,opts)=>{const t=await llamar(prompt,opts,true);const m=t.match(/\{[\s\S]*\}/);if(!m){const x=new Error("json");x.code="json";throw x;}return JSON.parse(m[0]);};
   sample.limits=async()=>({images:true});
   const assets={upload:async f=>window.__fb.upload(f),delete:async id=>window.__fb.borrar(id)};
-  window.claude={use:async n=>n==="db"?dbReady:n==="downloads"?downloads:n==="sample"?sample:n==="assets"?(window.__fb&&window.__fb.upload?assets:null):null};
+  // ¿Ya está instalado el lector? (si no, la app pasa directo a capturar a mano)
+  let lectorP=null;
+  function lectorListo(){if(!lectorP)lectorP=Promise.race([
+      fetch(FUNC_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"}).then(r=>r.status===401||r.ok,()=>false),
+      new Promise(r=>setTimeout(()=>r(false),5000))]).then(ok=>{if(!ok)lectorP=null;return ok;});
+    return lectorP;}
+  const conTiempo=(p,ms)=>Promise.race([p,new Promise((_,j)=>setTimeout(()=>j(new Error("tiempo")),ms))]);
+  const assets2={upload:async f=>conTiempo(window.__fb.upload(f),20000),delete:async id=>window.__fb.borrar(id)};
+  window.claude={use:async n=>n==="db"?dbReady:n==="downloads"?downloads
+    :n==="sample"?((await lectorListo())?sample:null)
+    :n==="assets"?((window.__fb&&window.__fb.upload&&await lectorListo())?assets2:null):null};
 })();
 </script>
 <script type="module">
@@ -640,7 +654,7 @@ else{
   const app=initializeApp(firebaseConfig);
   const auth=getAuth(app);
   const fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
-  const st=getStorage(app);
+  const st=getStorage(app);st.maxUploadRetryTime=15000;st.maxOperationRetryTime=15000;
   let ref=null,started=false;
   window.__fb={
     setField:(c,id,v)=>updateDoc(ref,new FieldPath(c,id),v),
@@ -1404,7 +1418,7 @@ function ensurePdf(){if(!pdfReady){const base="https://cdnjs.cloudflare.com/ajax
 async function runImport(blob,mime,asset,hintId){
   const fail=msg=>{$("#ovF").classList.remove("busy");$("#fBody").innerHTML=`<h2 id="fTitle">No se pudo leer</h2><p>${esc(msg)}</p><div class="actions"><button type="button" id="fManual">Capturar a mano</button><button type="button" class="primary" id="fClose2">Cerrar</button></div>`;$("#fClose2").onclick=closeFicha;$("#fManual").onclick=()=>manualEstado(hintId);};
   try{
-    const sample=await window.claude.use("sample");if(!sample) return fail("La lectura con Claude no está disponible en esta vista.");
+    const sample=await window.claude.use("sample");if(!sample){toast("La lectura automática aún no está activada: captura los datos.");return manualEstado(hintId);}
     $("#progMsg")&&($("#progMsg").textContent="Sacando el texto del documento…");
     const inp=await blobToInput(blob,mime);
     let canImg=false;try{canImg=!!(await sample.limits()).images;}catch(e){}
