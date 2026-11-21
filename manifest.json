@@ -4,8 +4,8 @@
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
- "background_color": "#f3f5fb",
- "theme_color": "#0e9384",
+ "background_color": "#f4f6fb",
+ "theme_color": "#2457d6",
  "lang": "es-MX",
  "icons": [
   {
@@ -20,5 +20,24 @@
    "type": "image/png",
    "purpose": "any maskable"
   }
- ]
+ ],
+ "share_target": {
+  "action": "./compartir",
+  "method": "POST",
+  "enctype": "multipart/form-data",
+  "params": {
+   "title": "title",
+   "text": "text",
+   "files": [
+    {
+     "name": "archivo",
+     "accept": [
+      "image/*",
+      "application/pdf",
+      ".pdf"
+     ]
+    }
+   ]
+  }
+ }
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mis Tarjetas</title>
-<meta name="theme-color" content="#0e9384">
+<meta name="theme-color" content="#2457d6">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -1049,6 +1049,14 @@ async function notifyDue(force){try{if(!("Notification" in window)||Notification
   const reg=await navigator.serviceWorker.getRegistration();if(reg)reg.showNotification("Pagos de tarjeta por vencer",{body,icon:"icon-192.png"});else new Notification("Pagos de tarjeta por vencer",{body});
   localStorage.setItem(key,"1");}catch(e){}}
 window.addEventListener("fb-ready",()=>setTimeout(()=>notifyDue(false),1500));
+async function tomarCompartido(){try{
+  if(!/compartido=1/.test(location.search)||!("caches" in window))return;
+  history.replaceState(null,"",location.pathname);
+  const ca=await caches.open("compartido");const r=await ca.match("archivo-compartido");if(!r)return;
+  const b=await r.blob();const nombre=decodeURIComponent(r.headers.get("x-nombre")||"archivo");await ca.delete("archivo-compartido");
+  askTipo(new File([b],nombre,{type:b.type||r.headers.get("content-type")||""}));
+}catch(e){}}
+window.addEventListener("fb-ready",()=>setTimeout(tomarCompartido,600));
 $("#btnConfig").onclick=openConfig;
 
 document.addEventListener("click",e=>{
@@ -1330,27 +1338,28 @@ function manualEstado(id){
 }
 function pickFile(id,mode){upHint=id||null;upMode=mode||"estado";
   const tit=upMode==="pago"?"Registrar un pago":upMode==="compra"?"Registrar una compra":"Subir estado de cuenta";
-  const gal=`<button type="button" class="bigact a1" id="pkGal"><span class="ic">🖼️</span><span class="tx"><b>Elegir foto de la galería</b><small>Captura de pantalla o foto que ya tienes</small></span><span class="chev">›</span></button>`;
+  const gal=`<button type="button" class="bigact a1" id="pkGal"><span class="ic">🖼️</span><span class="tx"><b>Elegir de mis fotos</b><small>Captura de pantalla o foto que ya tienes</small></span><span class="chev">›</span></button>`;
   const cam=`<button type="button" class="bigact a2" id="pkCam"><span class="ic">📷</span><span class="tx"><b>Tomar foto ahora</b><small>Del ticket, comprobante o estado de cuenta</small></span><span class="chev">›</span></button>`;
-  const pdf=`<button type="button" class="bigact a3" id="pkPdf"><span class="ic">📄</span><span class="tx"><b>Elegir archivo PDF</b><small>El que te manda el banco por correo o descargas de su app</small></span><span class="chev">›</span></button>`;
+  const pdf=`<button type="button" class="bigact a3" id="pkPdf"><span class="ic">📄</span><span class="tx"><b>Buscar en mis archivos</b><small>PDF del banco, Descargas o archivos de WhatsApp</small></span><span class="chev">›</span></button>`;
   const canManual=upMode!=="estado"||upHint||typeof manualEstado==="function";
   $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">${tit}</h2><button type="button" id="pkClose">Cerrar</button></div>
     <p class="muted" style="margin:0">¿De dónde lo quieres subir?</p>
     <div class="bigacts">${upMode==="estado"?pdf+gal+cam:gal+cam+pdf}</div>
-    ${canManual?`<button type="button" id="pkMan" style="justify-content:center">Prefiero escribir los datos a mano</button>`:""}`;
+    ${canManual?`<button type="button" id="pkMan" style="justify-content:center">Prefiero escribir los datos a mano</button>`:""}
+    ${window.STANDALONE?`<p class="muted" style="margin:0;font-size:15px">💡 Más fácil: desde tu galería, WhatsApp o correo toca <b>Compartir</b> y elige <b>Mis Tarjetas</b>.</p>`:""}`;
   $("#ovF").classList.add("open");
   const go=(acc,cap)=>{const f=$("#fileIn");f.value="";f.setAttribute("accept",acc);if(cap)f.setAttribute("capture","environment");else f.removeAttribute("capture");closeFicha();f.click();};
   $("#pkClose").onclick=closeFicha;
-  $("#pkGal").onclick=()=>go("image/*",false);
+  $("#pkGal").onclick=()=>go("image/jpeg,image/png,image/webp,image/heic,image/heif",false);
   $("#pkCam").onclick=()=>go("image/*",true);
-  $("#pkPdf").onclick=()=>go("application/pdf",false);
+  $("#pkPdf").onclick=()=>go("application/pdf,image/jpeg,image/png,image/webp",false);
   if(canManual)$("#pkMan").onclick=()=>{closeFicha();if(upMode==="pago")openPayModal(upHint);else if(upMode==="compra")openCompraModal({tarjeta:upHint});else if(typeof manualEstado==="function")manualEstado(upHint);else newCycle(upHint);};
 }
 $("#btnUpEdo").addEventListener("click",()=>pickFile(null,"estado"));
 $("#btnUpPago").addEventListener("click",()=>pickFile(null,"pago"));
 $("#btnUpCompra").addEventListener("click",()=>pickFile(null,"compra"));
-$("#fileIn").addEventListener("change",async()=>{
-  const f=$("#fileIn").files[0];if(!f)return;
+$("#fileIn").addEventListener("change",()=>{const f=$("#fileIn").files[0];if(f)handleFile(f);});
+async function handleFile(f){
   if(f.size>20*1024*1024){toast("El archivo pasa de 20 MB.");return;}
   let asset=null;
   progress("Guardando "+f.name+"…");
@@ -1358,7 +1367,23 @@ $("#fileIn").addEventListener("change",async()=>{
   if(upMode==="compra"){$("#fTitle")&&($("#fTitle").textContent="Leyendo tu compra");await runCompraImport(f,f.type,asset,upHint);}
   else if(upMode==="pago"){$("#fTitle")&&($("#fTitle").textContent="Leyendo tu comprobante de pago");await runPagoImport(f,f.type,asset,upHint);}
   else await runImport(f,f.type,asset,upHint);
-});
+}
+/* elegir qué es un archivo que llegó compartido, pegado o arrastrado */
+function askTipo(f){
+  upHint=null;const esImg=(f.type||"").startsWith("image/");
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">¿Qué es este archivo?</h2><button type="button" id="tqClose">Cerrar</button></div>
+    <p class="muted" style="margin:0">${esc(f.name||"archivo")}</p>${esImg?`<img src="${URL.createObjectURL(f)}" alt="" style="max-height:220px;object-fit:contain;border-radius:14px;background:var(--gray-soft)">`:""}
+    <div class="bigacts">
+      <button type="button" class="bigact a1" data-tq="pago"><span class="ic">✅</span><span class="tx"><b>Un pago que hice</b></span><span class="chev">›</span></button>
+      <button type="button" class="bigact a2" data-tq="compra"><span class="ic">🛍️</span><span class="tx"><b>Una compra</b></span><span class="chev">›</span></button>
+      <button type="button" class="bigact a3" data-tq="estado"><span class="ic">📄</span><span class="tx"><b>Mi estado de cuenta</b></span><span class="chev">›</span></button>
+    </div>`;
+  $("#ovF").classList.add("open");$("#tqClose").onclick=closeFicha;
+  $("#fBody").querySelectorAll("[data-tq]").forEach(b=>b.onclick=()=>{upMode=b.dataset.tq;handleFile(f);});
+}
+document.addEventListener("paste",e=>{const it=[...((e.clipboardData||{}).items||[])].find(i=>i.kind==="file");if(!it)return;const f=it.getAsFile();if(f){e.preventDefault();askTipo(f);}});
+document.addEventListener("dragover",e=>{if([...(e.dataTransfer||{}).types||[]].includes("Files"))e.preventDefault();});
+document.addEventListener("drop",e=>{const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(!f)return;e.preventDefault();askTipo(f);});
 function progress(msg){
   $("#fBody").innerHTML=`<h2 id="fTitle">Leyendo tu estado de cuenta</h2><p class="muted" id="progMsg">${esc(msg)}</p><div class="bar"><span style="width:100%;opacity:.5"></span></div>`;
   $("#ovF").classList.add("open","busy");
