@@ -1319,7 +1319,6 @@ function renderCompras(){
 
 /* ---------- subir y leer estados de cuenta ---------- */
 let upHint=null,upMode="estado";
-function pickFile(id,mode){upHint=id||null;upMode=mode||"estado";$("#fileIn").value="";$("#fileIn").click();}
 function manualEstado(id){
   if(id)return newCycle(id);
   const cards=tarjetas.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre));
@@ -1328,6 +1327,24 @@ function manualEstado(id){
     <label for="ncCard">Tarjeta<select id="ncCard">${cards.map(t=>`<option value="${esc(t.id)}">${esc(t.nombre)}</option>`).join("")}</select></label>
     <div class="modal-foot"><button type="button" id="ncCancel">Cancelar</button><button type="button" class="primary" id="ncGo">Continuar</button></div>`;
   $("#ovF").classList.add("open");$("#ncCancel").onclick=closeFicha;$("#ncGo").onclick=()=>{const v=$("#ncCard").value;closeFicha();newCycle(v);};
+}
+function pickFile(id,mode){upHint=id||null;upMode=mode||"estado";
+  const tit=upMode==="pago"?"Registrar un pago":upMode==="compra"?"Registrar una compra":"Subir estado de cuenta";
+  const gal=`<button type="button" class="bigact a1" id="pkGal"><span class="ic">🖼️</span><span class="tx"><b>Elegir foto de la galería</b><small>Captura de pantalla o foto que ya tienes</small></span><span class="chev">›</span></button>`;
+  const cam=`<button type="button" class="bigact a2" id="pkCam"><span class="ic">📷</span><span class="tx"><b>Tomar foto ahora</b><small>Del ticket, comprobante o estado de cuenta</small></span><span class="chev">›</span></button>`;
+  const pdf=`<button type="button" class="bigact a3" id="pkPdf"><span class="ic">📄</span><span class="tx"><b>Elegir archivo PDF</b><small>El que te manda el banco por correo o descargas de su app</small></span><span class="chev">›</span></button>`;
+  const canManual=upMode!=="estado"||upHint||typeof manualEstado==="function";
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">${tit}</h2><button type="button" id="pkClose">Cerrar</button></div>
+    <p class="muted" style="margin:0">¿De dónde lo quieres subir?</p>
+    <div class="bigacts">${upMode==="estado"?pdf+gal+cam:gal+cam+pdf}</div>
+    ${canManual?`<button type="button" id="pkMan" style="justify-content:center">Prefiero escribir los datos a mano</button>`:""}`;
+  $("#ovF").classList.add("open");
+  const go=(acc,cap)=>{const f=$("#fileIn");f.value="";f.setAttribute("accept",acc);if(cap)f.setAttribute("capture","environment");else f.removeAttribute("capture");closeFicha();f.click();};
+  $("#pkClose").onclick=closeFicha;
+  $("#pkGal").onclick=()=>go("image/*",false);
+  $("#pkCam").onclick=()=>go("image/*",true);
+  $("#pkPdf").onclick=()=>go("application/pdf",false);
+  if(canManual)$("#pkMan").onclick=()=>{closeFicha();if(upMode==="pago")openPayModal(upHint);else if(upMode==="compra")openCompraModal({tarjeta:upHint});else if(typeof manualEstado==="function")manualEstado(upHint);else newCycle(upHint);};
 }
 $("#btnUpEdo").addEventListener("click",()=>pickFile(null,"estado"));
 $("#btnUpPago").addEventListener("click",()=>pickFile(null,"pago"));
