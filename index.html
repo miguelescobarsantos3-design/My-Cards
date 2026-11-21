@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 /* Tablero de pagos: resumen arriba, calendario de vencimientos al centro, meses abajo */
 :root{
@@ -307,6 +307,109 @@ h2{font-weight:800;letter-spacing:-.01em}
 .bottomnav .count{position:absolute;top:4px;right:calc(50% - 22px);margin:0}
 .toast{bottom:96px}
 @media (max-width:480px){.balance .big{font-size:36px}.rbtn .ic{width:52px;height:52px}.plastic{flex-basis:240px}}
+
+/* ===== Diseño para todas las edades: claro, grande y sencillo ===== */
+:root,:root[data-theme="light"]{
+  --bg:#f4f6fb; --surface:#ffffff; --ink:#111827; --muted:#4b5563; --line:#e2e6ee;
+  --accent:#2457d6; --accent-soft:#e8efff;
+  --red:#c62828; --red-soft:#fdecec; --orange:#b45309; --orange-soft:#fff3e3; --amber:#8a6100; --amber-soft:#fff8db; --green:#15803d; --green-soft:#e6f6ec; --gray-soft:#eef1f6;
+  --coral:#ea580c; --sky:#2457d6; --grape:#7c3aed; --sun-soft:#fff6e0; --grape-soft:#f1ebff; --sky-soft:#e8efff; --coral-soft:#ffefe6;
+  --display:"Nunito","Atkinson Hyperlegible",system-ui,sans-serif; --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --shadow:0 1px 2px rgba(17,24,39,.05),0 8px 24px rgba(17,24,39,.07);
+  color-scheme:light;
+}
+body{font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--display);font-weight:800}
+h2{font-size:21px}
+button,.btn{font-size:16px;min-height:46px;border-radius:14px;padding:10px 16px;font-weight:700}
+button.small{min-height:40px;font-size:15px;padding:8px 12px;border-radius:12px}
+input,select,textarea{font-size:17px;min-height:50px;border-radius:12px;padding:10px 12px;background:#fff;border:1.5px solid #cfd6e3}
+label{font-size:15px;color:var(--ink);gap:6px}
+.card{border-radius:22px;padding:18px;border:0;box-shadow:var(--shadow)}
+.wrap{max-width:640px;gap:22px;padding:20px 16px 130px}
+.hello{font-family:var(--display);font-size:28px;font-weight:900}
+#hoy{font-size:15px!important;color:var(--muted)}
+.iconbtn{width:48px;height:48px;min-height:48px}
+.sizebtn{gap:1px;font-family:var(--display);font-weight:900;color:var(--accent)}
+.sizebtn span{font-size:14px}.sizebtn .big{font-size:21px}
+.sizebtn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.moremenu button{min-height:52px;font-size:17px}
+/* tarjeta principal */
+.balance{background:linear-gradient(150deg,#2f66e8 0%,#1d43b0 100%);border-radius:28px;padding:22px 22px 18px;display:flex;flex-direction:column;gap:2px}
+.balance.soon{background:linear-gradient(150deg,#f08a1c 0%,#c2410c 100%)}
+.balance.late{background:linear-gradient(150deg,#e2433f 0%,#a51d24 100%)}
+.balance.ok{background:linear-gradient(150deg,#1fa35c 0%,#12753f 100%)}
+.balance .lbl{font-size:16px;font-weight:700;opacity:.95;position:relative;z-index:1}
+.nxname{font-family:var(--display);font-size:24px;font-weight:900;line-height:1.2;position:relative;z-index:1}
+.balance .big{font-family:var(--display);font-size:46px;font-weight:900;margin:2px 0;position:relative;z-index:1}
+.nxwhen{font-size:17px;font-weight:700;position:relative;z-index:1}
+.herobtn{margin-top:14px;align-self:stretch;justify-content:center;background:#fff;color:#111827;border:0;min-height:56px;font-size:18px;font-weight:800;border-radius:16px;position:relative;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.herobtn[hidden]{display:none}
+.nextpill{font-size:15px;margin-top:14px}
+.nextpill b{font-size:18px}
+/* acciones grandes */
+.qtitle{margin:0 2px 12px}
+.bigacts{display:flex;flex-direction:column;gap:12px}
+.bigact{display:flex;align-items:center;gap:14px;width:100%;text-align:left;min-height:84px;padding:14px 16px;border-radius:20px;border:0;box-shadow:var(--shadow);background:var(--surface)}
+.bigact .ic{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;flex:none}
+.bigact .ic svg{width:28px;height:28px}
+.bigact .tx{flex:1;display:flex;flex-direction:column;gap:2px}
+.bigact .tx b{font-family:var(--display);font-size:19px;font-weight:800;line-height:1.25}
+.bigact .tx small{font-size:15px;color:var(--muted);font-weight:400}
+.bigact .chev{font-size:32px;line-height:1;color:#9aa3b2;font-weight:400}
+.bigact.a1 .ic{background:var(--green-soft);color:var(--green)}
+.bigact.a2 .ic{background:var(--coral-soft);color:var(--coral)}
+.bigact.a3 .ic{background:var(--accent-soft);color:var(--accent)}
+.bigact.a4 .ic{background:var(--grape-soft);color:var(--grape)}
+.avsec{display:flex;flex-direction:column;gap:10px;padding:14px 0;border-top:1px solid var(--line)}
+.avsec h3{font-size:19px;display:flex;align-items:center;gap:8px}
+.avsec p{margin:0;color:var(--muted)}
+.avrow{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 0}
+.avrow b{display:block}.avrow span{font-size:15px;color:var(--muted)}
+.btnwa{background:#1fa855;border-color:#1fa855;color:#fff}
+.avsec .bigbtn{min-height:54px;justify-content:center;font-size:17px}
+.bigact:hover{transform:translateY(-1px)}
+.bigact:active{transform:scale(.99)}
+/* lista de pagos */
+.seg{background:var(--gray-soft);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;min-height:42px;font-size:15px}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.prow{flex-wrap:wrap;gap:12px;padding:16px 2px}
+.prow .bank-av{width:48px;height:48px;border-radius:14px;font-size:14px}
+.prow .pinfo b{font-size:18px;white-space:normal}
+.prow .pinfo span{font-size:15px}
+.prow .pright b{font-size:20px}
+.prow .pchip{width:100%;padding-left:60px;margin-top:-6px}
+.dchip{font-size:14px;padding:4px 10px}
+.paybtn{min-height:44px;padding:8px 16px;font-size:16px;border-radius:12px}
+/* avisos */
+.alert{font-size:16px;padding:14px 16px;border-radius:16px}
+.revisar{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.revisar summary{cursor:pointer;font-weight:700;font-size:16px;min-height:44px;display:flex;align-items:center;gap:8px;color:var(--accent)}
+.count2{background:var(--amber-soft);color:var(--amber);border-radius:99px;padding:1px 9px;font-size:14px}
+.count2:empty{display:none}
+.hint{margin:-4px 2px 10px;font-size:15px}
+.sechead .primary{min-height:44px}
+/* navegación de abajo */
+.bottomnav{width:min(560px,calc(100% - 20px));padding:6px;border-radius:24px;bottom:10px}
+.bottomnav button{min-height:62px;font-size:13px;font-weight:700;gap:3px;color:#4b5563}
+.bottomnav button svg{width:26px;height:26px}
+.bottomnav button[aria-selected="true"]{background:var(--accent);color:#fff}
+.toast{font-size:17px;bottom:100px;padding:14px 18px}
+.modal{border-radius:24px;padding:22px}
+.modal h2{font-size:23px}
+.stat{border-radius:20px;padding:16px}.stat span{font-size:15px;color:var(--ink)}.stat b{font-size:24px}.stat small{font-size:14px}
+.chip{font-size:13px}
+.kv span{font-size:13px}.kv b{font-size:16px}
+.status-line{font-size:14px}
+.plastic .pb{font-size:13px}.plastic .pn{font-size:18px}.plastic .pm{font-size:24px}.plastic .pfoot{font-size:13px}
+/* modo letra grande (adultos mayores) */
+html[data-size="grande"] body{zoom:1.22}
+@supports not (zoom:1){html[data-size="grande"]{font-size:120%}}
+html[data-size="grande"] .stats2{grid-template-columns:1fr}
+html[data-size="grande"] .bigact .tx small{display:none}
+html[data-size="grande"] .bottomnav button span:not(.count){font-size:12px}
+@media (max-width:380px){.balance .big{font-size:40px}.bigact .tx b{font-size:18px}.bottomnav button{font-size:12px}}
 </style>
 </head>
 <body>
@@ -314,39 +417,43 @@ h2{font-weight:800;letter-spacing:-.01em}
   <header class="topbar">
     <div><div class="hello" id="hello">Hola, Miguel</div><div class="muted" id="hoy" style="font-size:13px"></div></div>
     <div class="topicons">
+      <button id="btnSize" type="button" class="iconbtn sizebtn" aria-label="Cambiar tamaño de letra" aria-pressed="false"><span>A</span><span class="big">A</span></button>
       <button id="btnMore" type="button" class="iconbtn" aria-label="Más opciones" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
       <button id="btnConfig" type="button" class="iconbtn" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg></button>
       <div class="moremenu" id="moreMenu" hidden>
         <button id="btnCal" type="button">Recordatorios al calendario</button>
+        <button id="btnAvisos2" type="button">Avisos de vencimiento</button>
         <button id="btnMail" type="button">Enviar resumen por correo</button>
         <button id="btnBackup" type="button">Descargar respaldo</button>
+        <button id="btnAddCard2" type="button">Agregar una tarjeta</button>
       </div>
     </div>
   </header>
 
   <div class="tabpanel" id="tab-pagos">
-  <section class="balance">
-    <div class="lbl">Te falta pagar este ciclo</div>
-    <div class="big num" id="kFalta">—</div>
-    <div class="sub" id="kFaltaSub"></div>
-    <div class="nextpill"><span class="lbl2">Próximo pago</span><b id="kProx">—</b><span id="kProxSub"></span></div>
+  <section class="balance" id="heroCard">
+    <div class="lbl" id="nxLbl">Lo próximo que tienes que pagar</div>
+    <div class="nxname" id="nxName">—</div>
+    <div class="big num" id="nxAmt">—</div>
+    <div class="nxwhen" id="nxWhen"></div>
+    <button type="button" class="herobtn" id="btnProxPay">Ya lo pagué</button>
+    <div class="nextpill"><span class="lbl2">En total te falta pagar</span><b class="num" id="kFalta">—</b><span id="kFaltaSub"></span><span hidden id="kProx"></span><span hidden id="kProxSub"></span></div>
   </section>
-  <div class="rounds">
-    <button id="btnUpCompra" type="button" class="rbtn"><span class="ic c1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span>Compra</button>
-    <button id="btnUpPago" type="button" class="rbtn"><span class="ic c2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>Pago</button>
-    <button id="btnUpEdo" type="button" class="rbtn"><span class="ic c3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span>Corte</button>
-    <button id="btnAddCard" type="button" class="rbtn"><span class="ic c4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Tarjeta</button>
-  </div>
 
   <section>
-    <div class="sechead"><h2>Mis tarjetas</h2><button type="button" class="linkbtn" data-goto="tarjetas">Ver todas ›</button></div>
-    <div class="carousel" id="carousel"></div>
+    <h2 class="qtitle">¿Qué quieres hacer?</h2>
+    <div class="bigacts">
+      <button id="btnUpPago" type="button" class="bigact a1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="tx"><b>Ya pagué una tarjeta</b><small>Sube la foto del comprobante o escribe el monto</small></span><span class="chev">›</span></button>
+      <button id="btnUpCompra" type="button" class="bigact a2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg></span><span class="tx"><b>Hice una compra</b><small>Foto del ticket o captura de la compra</small></span><span class="chev">›</span></button>
+      <button id="btnUpEdo" type="button" class="bigact a3"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span><span class="tx"><b>Me llegó mi estado de cuenta</b><small>Sube el PDF del banco y se actualiza solo</small></span><span class="chev">›</span></button>
+      <button id="btnAvisos" type="button" class="bigact a4"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span class="tx"><b>Avisos de mis pagos</b><small>Que tu celular, correo o WhatsApp te recuerde antes de que venza</small></span><span class="chev">›</span></button>
+    </div>
   </section>
 
   <section class="card">
     <div class="section-head">
-      <h2>Próximos pagos</h2>
-      <div class="filters" id="filtroTarjetas">
+      <h2>Tus pagos</h2>
+      <div class="filters seg" id="filtroTarjetas">
         <button type="button" data-f="pend" aria-pressed="true">Por pagar</button>
         <button type="button" data-f="all" aria-pressed="false">Todas</button>
       </div>
@@ -355,17 +462,33 @@ h2{font-weight:800;letter-spacing:-.01em}
   </section>
 
   <section class="card">
-    <div class="section-head"><h2>Alertas</h2></div>
+    <div class="section-head"><h2>Avisos</h2></div>
     <div class="alerts" id="alerts" aria-live="polite"></div>
-    <div id="notas" class="bars" style="margin-top:10px"></div>
+    <details class="revisar"><summary>Cosas por revisar de tus tarjetas <span class="count2" id="notasCount"></span></summary>
+      <div id="notas" class="bars" style="margin-top:10px"></div></details>
   </section>
+  </div>
 
+  <div class="tabpanel" id="tab-tarjetas" hidden>
+    <section>
+      <div class="sechead"><h2>Mis tarjetas</h2><button type="button" class="primary" id="btnAddCard">+ Agregar tarjeta</button></div>
+      <p class="muted hint">Toca una tarjeta para ver sus datos, beneficios y documentos.</p>
+      <div class="carousel" id="carousel"></div>
+    </section>
+    <section class="card">
+      <div class="section-head"><h2>Avisos de tus tarjetas</h2><span class="status-line">Se actualizan cuando subes tu estado de cuenta</span></div>
+      <div class="alerts" id="condAlerts"></div>
+    </section>
+    <div class="fichas" id="fichas"></div>
+  </div>
+
+  <div class="tabpanel" id="tab-compras" hidden>
+  <button id="btnUpCompra2" type="button" class="bigact a2"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="tx"><b>Registrar una compra</b><small>Foto del ticket o captura de la compra</small></span><span class="chev">›</span></button>
   <div class="stats2">
-    <div class="stat s1"><span>Mensualidades a meses</span><b class="num" id="kMsi">—</b><small id="kMsiSub"></small></div>
-    <div class="stat s2"><span>Deuda total</span><b class="num" id="kDeuda">—</b><small id="kDeudaSub"></small></div>
+    <div class="stat s1"><span>Pagas a meses cada mes</span><b class="num" id="kMsi">—</b><small id="kMsiSub"></small></div>
+    <div class="stat s2"><span>Debes en total</span><b class="num" id="kDeuda">—</b><small id="kDeudaSub"></small></div>
   </div>
   <div id="bars" hidden></div>
-
   <section class="card">
     <div class="section-head">
       <h2>Compras a meses</h2>
@@ -387,14 +510,6 @@ h2{font-weight:800;letter-spacing:-.01em}
     </div>
     <div id="comprasList"><div class="empty">Cargando…</div></div>
   </section>
-  </div>
-
-  <div class="tabpanel" id="tab-tarjetas" hidden>
-    <section class="card">
-      <div class="section-head"><h2>Alertas de tus tarjetas</h2><span class="status-line">Sube el estado de cuenta y Claude actualiza todo</span></div>
-      <div class="alerts" id="condAlerts"></div>
-    </section>
-    <div class="fichas" id="fichas"></div>
   </div>
 
   <div class="tabpanel" id="tab-analisis" hidden>
@@ -424,7 +539,8 @@ h2{font-weight:800;letter-spacing:-.01em}
 
 <nav class="tabs bottomnav" role="tablist" id="tabs">
   <button type="button" role="tab" data-tab="pagos" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg><span>Inicio</span></button>
-  <button type="button" role="tab" data-tab="tarjetas" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><span>Tarjetas</span><span class="count" id="tabCount" hidden></span></button>
+  <button type="button" role="tab" data-tab="tarjetas" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg><span>Mis tarjetas</span><span class="count" id="tabCount" hidden></span></button>
+  <button type="button" role="tab" data-tab="compras" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Compras</span></button>
   <button type="button" role="tab" data-tab="analisis" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Análisis</span></button>
 </nav>
 <div class="overlay" id="ov" role="dialog" aria-modal="true" aria-labelledby="mTitle">
@@ -478,7 +594,29 @@ window.STANDALONE=true;
     dump(){return clean(STORE);}
   };
   const downloads={save:async({filename,data})=>{const b=new Blob([data],{type:"application/octet-stream"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}};
-  window.claude={use:async n=>n==="db"?dbReady:n==="downloads"?downloads:null};
+  /* Lectura con Claude: la hace el servidor de Firebase (la clave nunca está en la app) */
+  const FUNC_URL="https://us-central1-my-cards-3a148.cloudfunctions.net/leerDocumento";
+  async function toImg(blob){
+    try{const bm=await createImageBitmap(blob);const k=Math.min(1,1800/Math.max(bm.width,bm.height));
+      const cv=document.createElement("canvas");cv.width=Math.round(bm.width*k);cv.height=Math.round(bm.height*k);cv.getContext("2d").drawImage(bm,0,0,cv.width,cv.height);
+      blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",0.85));}catch(e){}
+    const u=await new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=j;fr.readAsDataURL(blob);});
+    const m=String(u).match(/^data:([^;]+);base64,(.*)$/);return{tipo:m?m[1]:"image/jpeg",datos:m?m[2]:""};
+  }
+  async function llamar(prompt,opts,json){
+    opts=opts||{};const tok=await window.__fb.idToken();
+    const imagenes=await Promise.all((opts.images||[]).map(toImg));
+    let r;try{r=await fetch(FUNC_URL,{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json"},body:JSON.stringify({prompt,imagenes,nivel:opts.modelTier||"default",json:!!json})});}
+    catch(e){const x=new Error("red");x.code="red";throw x;}
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){const x=new Error(d.error||"error");x.code=r.status===429?"limite":r.status===503?"rate_limited":r.status===401?"sin_sesion":(d.error||"error");throw x;}
+    return d.texto||"";
+  }
+  const sample=async(prompt,opts)=>{const t=await llamar(prompt,opts,false);if(opts&&opts.onText)opts.onText({text:t});return{text:t};};
+  sample.json=async(prompt,opts)=>{const t=await llamar(prompt,opts,true);const m=t.match(/\{[\s\S]*\}/);if(!m){const x=new Error("json");x.code="json";throw x;}return JSON.parse(m[0]);};
+  sample.limits=async()=>({images:true});
+  const assets={upload:async f=>window.__fb.upload(f),delete:async id=>window.__fb.borrar(id)};
+  window.claude={use:async n=>n==="db"?dbReady:n==="downloads"?downloads:n==="sample"?sample:n==="assets"?(window.__fb&&window.__fb.upload?assets:null):null};
 })();
 </script>
 <script type="module">
@@ -494,6 +632,7 @@ const firebaseConfig = {
 /* ================================================================ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getStorage, ref as sref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const msg=t=>{const e=document.getElementById("loginMsg");if(e)e.textContent=t;};
 if(firebaseConfig.apiKey==="PEGA_AQUI"){msg("Falta pegar la configuración de Firebase en index.html.");}
@@ -501,13 +640,19 @@ else{
   const app=initializeApp(firebaseConfig);
   const auth=getAuth(app);
   const fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+  const st=getStorage(app);
   let ref=null,started=false;
   window.__fb={
     setField:(c,id,v)=>updateDoc(ref,new FieldPath(c,id),v),
     delField:(c,id)=>updateDoc(ref,new FieldPath(c,id),deleteField()),
     replaceAll:(data)=>setDoc(ref,data),
     logout:()=>signOut(auth).then(()=>location.reload()),
-    user:null
+    user:null,
+    idToken:()=>auth.currentUser.getIdToken(),
+    upload:async f=>{const uid=auth.currentUser.uid;const id=Date.now().toString(36)+"_"+String(f.name||"documento").replace(/[^\w.\-]/g,"_").slice(-60);
+      const r=sref(st,"usuarios/"+uid+"/docs/"+id);await uploadBytes(r,f,{contentType:f.type||"application/octet-stream"});
+      return{id,sizeBytes:f.size,url:await getDownloadURL(r)};},
+    borrar:async id=>{try{await deleteObject(sref(st,"usuarios/"+auth.currentUser.uid+"/docs/"+id));}catch(e){}}
   };
   document.getElementById("btnLogin").onclick=async()=>{msg("Abriendo Google…");
     try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(e){if(e&&e.code==="auth/popup-blocked")signInWithRedirect(auth,new GoogleAuthProvider());else msg("No se pudo entrar: "+(e.code||e.message));}};
@@ -587,7 +732,7 @@ function renderCarousel(){const box=document.getElementById("carousel");if(!box)
     return `<button type="button" class="plastic" data-ficha="${esc(t.id)}" style="background:linear-gradient(135deg,${c} 0%,${shade(c,.62)} 100%)">
       <div style="position:relative;z-index:1"><div class="pb">${esc(t.banco||"")}</div><div class="pn">${esc(nm)}</div></div>
       <div style="position:relative;z-index:1"><div class="pm num">${money(t.saldoTotal||0)}<small>${t.limite?"usado de "+money(t.limite):"tarjeta de cargo"}</small></div>${u!==null?`<div class="pbar"><span style="width:${Math.min(100,Math.round(u*100))}%"></span></div>`:""}</div>
-      <div class="pfoot"><span>•••• ${esc(term)}</span><span class="ptag">${esc(e.txt)}</span></div></button>`;}).join(""):'<div class="empty">Agrega tu primera tarjeta con el botón “Tarjeta”.</div>';}
+      <div class="pfoot"><span>•••• ${esc(term)}</span><span class="ptag">${esc(e.txt)}</span></div></button>`;}).join(""):'<div class="empty">Agrega tu primera tarjeta con el botón “Agregar tarjeta”.</div>';}
 function isPend(t){return (t.estatus||"Pendiente")==="Pendiente";}
 function estado(t){
   const d=daysTo(t.fechaLimite);
@@ -621,10 +766,16 @@ function render(){
   // kpis
   const falta=pend.reduce((s,t)=>s+restanteDe(t),0);
   $("#kFalta").textContent=money(falta);
-  $("#kFaltaSub").textContent=pend.length?(pend.length===1?"1 tarjeta por pagar":pend.length+" tarjetas por pagar"):"Estás al día";
+  $("#kFaltaSub").textContent=pend.length?(pend.length===1?"de 1 tarjeta":"de "+pend.length+" tarjetas"):"";
   const prox=pend.filter(t=>daysTo(t.fechaLimite)!==null&&daysTo(t.fechaLimite)>=0)[0]||pend[0];
-  if(prox){const d=daysTo(prox.fechaLimite);$("#kProx").textContent=fd(prox.fechaLimite,true);$("#kProxSub").textContent=prox.nombre+" · "+(d<0?"vencida":d===0?"hoy":"en "+d+" días")+" · "+money(prox.pagoSinIntereses);}
-  else{$("#kProx").textContent="Nada pendiente";$("#kProxSub").textContent="";}
+  const hero=$("#heroCard");hero.classList.remove("ok","late","soon");
+  if(prox){const d=daysTo(prox.fechaLimite);
+    $("#nxLbl").textContent=d!==null&&d<0?"Este pago ya venció":"Lo próximo que tienes que pagar";
+    $("#nxName").textContent=prox.nombre;$("#nxAmt").textContent=money(restanteDe(prox));
+    $("#nxWhen").textContent=d===null?"Sin fecha límite":d<0?"Venció el "+fd(prox.fechaLimite,true)+" ("+Math.abs(d)+(Math.abs(d)===1?" día":" días")+")":d===0?"Vence HOY, "+fd(prox.fechaLimite,true):d===1?"Vence MAÑANA, "+fd(prox.fechaLimite,true):"Vence el "+fd(prox.fechaLimite,true)+" · faltan "+d+" días";
+    hero.classList.add(d!==null&&d<0?"late":d!==null&&d<=Number(config.diasAviso||3)?"soon":"x");
+    $("#btnProxPay").hidden=false;$("#btnProxPay").dataset.id=prox.id;$("#btnProxPay").textContent="Ya lo pagué";}
+  else{$("#nxLbl").textContent=tarjetas.length?"¡Muy bien!":"Bienvenido";$("#nxName").textContent=tarjetas.length?"Estás al día":"Agrega tu primera tarjeta";$("#nxAmt").textContent=tarjetas.length?"$0":"";$("#nxWhen").textContent=tarjetas.length?"No tienes pagos pendientes en este ciclo.":"Ve a “Mis tarjetas” y toca “Agregar tarjeta”.";hero.classList.add("ok");$("#btnProxPay").hidden=true;}
   const act=msi.filter(m=>msiRest(m)>0);
   $("#kMsi").textContent=money(act.reduce((s,m)=>s+Number(m.mensualidad||0),0));
   $("#kMsiSub").textContent=act.length+" compras activas · "+money(act.reduce((s,m)=>s+Number(m.saldoPendiente||0),0))+" por pagar";
@@ -638,8 +789,8 @@ function render(){
     const chip=pend&&d!==null?(d<0?`<span class="dchip red">${Math.abs(d)} días tarde</span>`:d===0?`<span class="dchip orange">Vence hoy</span>`:`<span class="dchip ${e.c}">${d===1?"Mañana":"en "+d+" días"}</span>`):`<span class="dchip ${e.c==="green"?"green":"gray"}">${esc(e.txt)}</span>`;
     return `<div class="prow ${pend?"":"paid"}">${bankAv(t)}
       <div class="pinfo" data-ficha-row="${esc(t.id)}"><b>${esc(t.nombre)}</b><span>${pend?"Vence "+fd(t.fechaLimite,true):"Fecha límite "+fd(t.fechaLimite)}${t.estimado?" · estimado":""}${pend&&pagadoDe(t)>0?" · pagado "+money(pagadoDe(t)):""}</span></div>
-      <div class="pright"><b class="num">${money(pend?restanteDe(t):t.pagoSinIntereses)}</b>${pend?`<button class="small paybtn" data-pay="${esc(t.id)}" type="button">Pagar</button>`:chip}</div>
-      ${pend?`<div style="display:none">${chip}</div>`:""}</div>`;}).join(""):`<div class="empty">${tarjetas.length?"No tienes pagos pendientes. Todo al día.":"Aún no hay tarjetas."}</div>`;
+      <div class="pright"><b class="num">${money(pend?restanteDe(t):t.pagoSinIntereses)}</b>${pend?`<button class="paybtn" data-pay="${esc(t.id)}" type="button">Ya pagué</button>`:chip}</div>
+      ${pend?`<div class="pchip">${chip}</div>`:""}</div>`;}).join(""):`<div class="empty">${tarjetas.length?"No tienes pagos pendientes. Todo al día.":"Aún no hay tarjetas."}</div>`;
   renderCarousel();
 
   // barras
@@ -651,7 +802,7 @@ function render(){
   const notas=[];
   tarjetas.forEach(t=>{condAlerts(t).filter(z=>z.n==="alta").forEach(z=>notas.push(`<div><span class="chip red" style="margin-right:6px">${esc(t.nombre)}</span>${esc(z.x)}</div>`));});
   tarjetas.forEach(t=>{(t.revisar||[]).forEach(n=>notas.push(`<div><span class="chip amber" style="margin-right:6px">${esc(t.nombre)}</span>${esc(n)}</div>`));});
-  $("#notas").innerHTML=notas.join("")||'<div class="empty">Nada pendiente de revisar.</div>';
+  $("#notas").innerHTML=notas.join("")||'<div class="empty">Nada pendiente de revisar.</div>';$("#notasCount").textContent=notas.length?String(notas.length):"";
 
   // msi
   let list=msi.slice();
@@ -679,6 +830,34 @@ function gcal(t){
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${d}T150000Z/${d}T153000Z&details=${det}`;
 }
 function icsEsc(s){return String(s).replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");}
+function diaPago(t){const d=parseD(t.fechaLimite||"");return d?Math.min(d.getDate(),28):null;}
+function gcalMensual(t){
+  const dia=diaPago(t);const hoy=today();let f=new Date(hoy.getFullYear(),hoy.getMonth(),dia);if(f<hoy)f=new Date(hoy.getFullYear(),hoy.getMonth()+1,dia);
+  const d=iso(f).replace(/-/g,"");
+  const text=encodeURIComponent("Pagar "+t.nombre.replace(/·.*$/,"").trim()+" (fecha límite aprox.)");
+  const det=encodeURIComponent("Recordatorio mensual de Mis Tarjetas. Revisa en la app cuánto pagar este mes. La fecha del banco puede moverse 1 o 2 días.");
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${d}T150000Z/${d}T153000Z&details=${det}&recur=${encodeURIComponent("RRULE:FREQ=MONTHLY")}`;
+}
+function buildIcsMensual(){
+  const now=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";const hoy=today();
+  const ev=tarjetas.filter(t=>t.fechaLimite&&diaPago(t)).map(t=>{const dia=diaPago(t);
+    let f=new Date(hoy.getFullYear(),hoy.getMonth(),dia);if(f<hoy)f=new Date(hoy.getFullYear(),hoy.getMonth()+1,dia);const d=iso(f).replace(/-/g,"");
+    const nm=t.nombre.replace(/·.*$/,"").trim();
+    return ["BEGIN:VEVENT","UID:mensual-"+t.id+"@mis-tarjetas","DTSTAMP:"+now,"DTSTART;VALUE=DATE:"+d,"DURATION:P1D","RRULE:FREQ=MONTHLY;BYMONTHDAY="+dia,
+      "SUMMARY:"+icsEsc("Pagar "+nm+" (fecha límite aprox.)"),
+      "DESCRIPTION:"+icsEsc("Recordatorio mensual de Mis Tarjetas. Abre la app para ver cuánto pagar este mes. La fecha del banco puede moverse 1 o 2 días."),
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc("En 3 días vence "+nm),"TRIGGER:-P2DT15H","END:VALARM",
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc("Mañana vence "+nm),"TRIGGER:-PT15H","END:VALARM",
+      "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsEsc("Hoy vence "+nm),"TRIGGER:PT9H","END:VALARM",
+      "END:VEVENT"].join("\r\n");});
+  return {count:ev.length,text:["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Mis Tarjetas//ES","CALSCALE:GREGORIAN","METHOD:PUBLISH"].concat(ev).concat(["END:VCALENDAR"]).join("\r\n")};
+}
+async function saveIcsMensual(){
+  const ics=buildIcsMensual();if(!ics.count){toast("Primero registra la fecha límite de tus tarjetas.");return;}
+  try{const dl=await window.claude.use("downloads");if(!dl){toast("Descarga no disponible aquí. Usa “Cada mes en Google”.");return;}
+    await dl.save({filename:"pagos-cada-mes.ics",data:ics.text});toast("Ábrelo en tu celular y acepta: "+ics.count+" recordatorios que se repiten cada mes.");}
+  catch(e){toast("No se descargó. Usa “Cada mes en Google” en cada tarjeta.");}
+}
 function buildIcs(){
   const now=new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z";
   const ev=tarjetas.filter(t=>isPend(t)&&daysTo(t.fechaLimite)!==null&&daysTo(t.fechaLimite)>=0).map(t=>{
@@ -694,10 +873,50 @@ function buildIcs(){
 }
 $("#btnCal").addEventListener("click",async()=>{
   const ics=buildIcs(); if(!ics.count){toast("No hay pagos pendientes por venir.");return;}
-  try{const dl=await window.claude.use("downloads"); if(!dl){toast("Descarga no disponible aquí. Usa el botón “Calendario” de cada tarjeta.");return;}
+  try{const dl=await window.claude.use("downloads"); if(!dl){toast("Descarga no disponible aquí. Usa “Agregar a Google” en cada pago.");return;}
     await dl.save({filename:"pagos-tarjetas.ics",data:ics.text}); toast("Ábrelo en tu celular para guardar "+ics.count+" recordatorios (3 días antes, 1 día antes y el mismo día).");}
-  catch(e){toast("No se descargó el archivo. Puedes usar el botón “Calendario” de cada tarjeta.");}
+  catch(e){toast("No se descargó el archivo. Usa “Agregar a Google” en cada pago.");}
 });
+
+/* ---------- avisos de vencimiento ---------- */
+function avisoTexto(){
+  const pend=tarjetas.filter(t=>isPend(t)&&t.fechaLimite).sort((a,b)=>a.fechaLimite.localeCompare(b.fechaLimite));
+  if(!pend.length)return "";
+  const tot=pend.reduce((s,t)=>s+restanteDe(t),0);
+  return "Recordatorio de pagos de tarjeta:\n\n"+pend.map(t=>{const d=daysTo(t.fechaLimite);return "• "+t.nombre+": "+money(restanteDe(t))+" — "+(d<0?"VENCIDA ("+fd(t.fechaLimite,true)+")":d===0?"vence HOY":d===1?"vence MAÑANA":"vence el "+fd(t.fechaLimite,true)+" (en "+d+" días)");}).join("\n")+"\n\nTotal por pagar: "+money(tot);
+}
+function openAvisos(){
+  const pend=tarjetas.filter(t=>isPend(t)&&t.fechaLimite&&daysTo(t.fechaLimite)>=0).sort((a,b)=>a.fechaLimite.localeCompare(b.fechaLimite));
+  const hasNotif=typeof askNotif==="function";
+  const cardsCal=tarjetas.filter(t=>t.fechaLimite&&diaPago(t)).sort((a,b)=>diaPago(a)-diaPago(b));
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">Avisos de vencimiento</h2><button type="button" id="avClose">Cerrar</button></div>
+  <p class="muted" style="margin:0">Elige cómo quieres que te recuerden tus pagos. Puedes usar varios.</p>
+  <div class="avsec"><h3>📅 En el calendario de tu celular</h3>
+    <p><b>Una sola vez y se repite cada mes:</b> tu celular te avisa 3 días antes, 1 día antes y el mismo día de cada fecha límite, aunque no abras la app.</p>
+    <button type="button" class="primary bigbtn" id="avMes">Guardar recordatorios de cada mes</button>
+    <p style="font-size:14px">¿Usas Google Calendar (Android)? Agrega cada tarjeta para que se repita cada mes:</p>
+    ${cardsCal.length?cardsCal.map(t=>`<div class="avrow"><div><b>${esc(t.nombre)}</b><span>Cada mes, día ${diaPago(t)}</span></div><a class="btn small" href="${gcalMensual(t)}" target="_blank" rel="noopener">Cada mes en Google</a></div>`).join(""):'<p>Registra la fecha límite de tus tarjetas para poder crear los recordatorios.</p>'}
+    <button type="button" class="small" id="avIcs" style="align-self:flex-start">Solo los pagos de este mes, con su monto exacto</button>
+  </div>
+  <div class="avsec"><h3>💬 Por WhatsApp</h3>
+    <p>Mándate la lista de pagos o compártela con un familiar para que también te recuerde.</p>
+    <button type="button" class="btnwa bigbtn" id="avWa">Enviar por WhatsApp</button>
+  </div>
+  <div class="avsec"><h3>✉️ Por correo</h3>
+    <p>Te llega un resumen con lo que vence${window.STANDALONE?"":" (y uno automático al día cuando algo está por vencer, si lo activas en Ajustes)"}.</p>
+    <button type="button" class="bigbtn" id="avMail">Enviarme el resumen por correo</button>
+  </div>
+  ${hasNotif?`<div class="avsec"><h3>🔔 Avisos en este celular</h3><p>Al abrir la app te sale un aviso si algo vence en los próximos ${Number(config.diasAviso||3)} días.</p><button type="button" class="bigbtn" id="avNotif">Activar avisos aquí</button></div>`:""}`;
+  $("#ovF").classList.add("open");
+  $("#avClose").onclick=closeFicha;
+  $("#avIcs").onclick=()=>$("#btnCal").click();
+  $("#avMes").onclick=saveIcsMensual;
+  $("#avWa").onclick=()=>{const t=avisoTexto();if(!t){toast("No tienes pagos pendientes.");return;}window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");};
+  $("#avMail").onclick=()=>$("#btnMail").click();
+  if(hasNotif)$("#avNotif").onclick=()=>askNotif();
+}
+$("#btnAvisos").addEventListener("click",openAvisos);
+$("#btnAvisos2").addEventListener("click",()=>{$("#moreMenu").hidden=true;openAvisos();});
 
 /* ---------- correo ---------- */
 function mailHtml(){
@@ -780,6 +999,12 @@ function newCycle(id){
   const n=Object.assign({},t,{fechaCorte:addMonths(t.fechaCorte,1),fechaLimite:addMonths(t.fechaLimite,1),estatus:"Pendiente",estimado:true,pagadoCiclo:0});
   openModal("Nuevo corte · "+t.nombre,cardFields(n).filter(f=>["nombre","limite","notas","revisarTxt"].indexOf(f.k)<0),o=>saveDoc("tarjetas",id,cardFromForm(n,o)));
 }
+$("#btnUpCompra2").onclick=()=>$("#btnUpCompra").click();
+$("#btnAddCard2").onclick=()=>$("#btnAddCard").click();
+$("#btnProxPay").onclick=()=>{const id=$("#btnProxPay").dataset.id;if(id)openPayModal(id);};
+$("#btnSize").onclick=()=>setSize(document.documentElement.dataset.size!=="grande");
+function setSize(on){document.documentElement.dataset.size=on?"grande":"";$("#btnSize").setAttribute("aria-pressed",String(on));try{localStorage.setItem("mt-letra",on?"grande":"normal");}catch(e){}if(on)toast("Letra grande activada");}
+try{if(localStorage.getItem("mt-letra")==="grande")setSize(true);}catch(e){}
 $("#btnAddCard").onclick=()=>{const base={estatus:"Pendiente",revisar:[]};openModal("Agregar tarjeta",cardFields(base),o=>saveDoc("tarjetas",newId("t"),cardFromForm(base,o)));};
 function markPaid(id){openPayModal(id);}
 
@@ -908,7 +1133,7 @@ function openFicha(id){
   const t=tarjetas.find(x=>x.id===id);if(!t)return;fichaId=id;
   const c=t.condiciones||{},a=condAlerts(t),ue=t.ultimoEstado;
   $("#fBody").innerHTML=`
-    <div class="section-head" style="margin:0"><h2 id="fTitle">${esc(t.nombre)}</h2><div class="actions"><button type="button" class="small" id="fPay">Registrar pago</button><button type="button" class="primary small" id="fUp">Subir estado de cuenta</button><button type="button" id="fClose">Cerrar</button></div></div>
+    <div class="section-head" style="margin:0"><h2 id="fTitle">${esc(t.nombre)}</h2><div class="actions"><button type="button" class="small" id="fPay">Registrar pago</button>${isPend(t)&&t.fechaLimite?`<a class="btn small" href="${gcal(t)}" target="_blank" rel="noopener">Recordármelo</a>`:""}<button type="button" class="primary small" id="fUp">Subir estado de cuenta</button><button type="button" id="fClose">Cerrar</button></div></div>
     ${ue?`<div class="ai-text"><p>${esc(ue.resumen||"")}</p><p class="muted" style="font-size:12px">Último estado leído: corte ${fd(ue.fechaCorte)} · ${esc(ue.documento||"")}</p></div>`:'<p class="muted">Sube el PDF o una foto del estado de cuenta y Claude actualiza fechas, montos, condiciones y compras a meses.</p>'}
     ${t.usoIdeal?`<p style="margin:0"><b>Úsala para:</b> ${esc(t.usoIdeal)}</p>`:""}
     <p style="margin:0" class="muted">Saldo ideal: no más de <b>${saldoIdeal(t)===null?"—":money(saldoIdeal(t))}</b> (30% de tu línea). Hoy: ${money(t.saldoTotal)}.</p>
@@ -933,9 +1158,9 @@ function openFicha(id){
       <label class="full" for="c_instr">Instrucciones al leer sus estados (ej. no contar la adicional)<input id="c_instr" value="${esc(t.instrucciones||"")}"></label>
     </form>
     <div class="actions" style="margin-top:10px"><button type="button" class="small" id="cSave">Guardar</button></div></details>
-    <h3 style="font-size:15px;display:none">Estados de cuenta y documentos</h3>
-    <div class="docs" style="display:none">${(t.documentos||[]).slice().reverse().map(d=>{const i=(t.documentos||[]).indexOf(d);return `<div class="doc"><a href="/_blob/${esc(d.id)}" target="_blank" rel="noopener">${esc(d.nombre)}</a><span class="muted" style="font-size:12px;white-space:nowrap">${esc(d.tipo||"")} · ${fd(d.fecha)}</span><span class="rowactions">${d.tipo==="Estado de cuenta"?`<button type="button" class="small" data-analyze="${i}">Volver a leer</button>`:""}<button type="button" class="small danger" data-deldoc="${i}">Quitar</button></span></div>`;}).join("")||'<div class="muted">Aún no hay documentos.</div>'}</div>
-    `;
+    <h3 style="font-size:15px">Estados de cuenta y documentos</h3>
+    <div class="docs">${(t.documentos||[]).slice().reverse().map(d=>{const i=(t.documentos||[]).indexOf(d);return `<div class="doc"><a href="${esc(d.url||"#")}" target="_blank" rel="noopener">${esc(d.nombre)}</a><span class="muted" style="font-size:12px;white-space:nowrap">${esc(d.tipo||"")} · ${fd(d.fecha)}</span><span class="rowactions">${d.tipo==="Estado de cuenta"?`<button type="button" class="small" data-analyze="${i}">Volver a leer</button>`:""}<button type="button" class="small danger" data-deldoc="${i}">Quitar</button></span></div>`;}).join("")||'<div class="muted">Aún no hay documentos.</div>'}</div>
+    <p class="disclaimer">Lectura automática: revisa que los montos coincidan con tu banco.</p>`;
   $("#ovF").classList.add("open");
   $("#fClose").onclick=closeFicha;
   $("#fUp").onclick=()=>pickFile(t.id,"estado");$("#fPay").onclick=()=>openPayModal(t.id);
@@ -1094,13 +1319,12 @@ function renderCompras(){
 
 /* ---------- subir y leer estados de cuenta ---------- */
 let upHint=null,upMode="estado";
-function pickFile(id,mode){
-  mode=mode||"estado";
-  if(mode==="pago")return openPayModal(id);
-  if(mode==="compra")return openCompraModal({tarjeta:id});
+function pickFile(id,mode){upHint=id||null;upMode=mode||"estado";$("#fileIn").value="";$("#fileIn").click();}
+function manualEstado(id){
   if(id)return newCycle(id);
   const cards=tarjetas.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre));
-  $("#fBody").innerHTML=`<h2 id="fTitle">Nuevo estado de cuenta</h2><p class="muted" style="margin:0">Elige la tarjeta y captura los datos del corte nuevo. (Si me mandas el PDF en Claude, yo lo capturo por ti.)</p>
+  $("#ovF").classList.remove("busy");
+  $("#fBody").innerHTML=`<h2 id="fTitle">Capturar corte a mano</h2><p class="muted" style="margin:0">Elige la tarjeta y captura los datos del corte nuevo.</p>
     <label for="ncCard">Tarjeta<select id="ncCard">${cards.map(t=>`<option value="${esc(t.id)}">${esc(t.nombre)}</option>`).join("")}</select></label>
     <div class="modal-foot"><button type="button" id="ncCancel">Cancelar</button><button type="button" class="primary" id="ncGo">Continuar</button></div>`;
   $("#ovF").classList.add("open");$("#ncCancel").onclick=closeFicha;$("#ncGo").onclick=()=>{const v=$("#ncCard").value;closeFicha();newCycle(v);};
@@ -1113,7 +1337,7 @@ $("#fileIn").addEventListener("change",async()=>{
   if(f.size>20*1024*1024){toast("El archivo pasa de 20 MB.");return;}
   let asset=null;
   progress("Guardando "+f.name+"…");
-  try{const assets=await window.claude.use("assets");if(assets){const r=await assets.upload(f);asset={id:r.id,nombre:f.name,tipo:"Estado de cuenta",fecha:iso(today()),size:r.sizeBytes||f.size,mime:f.type};}}catch(e){}
+  try{const assets=await window.claude.use("assets");if(assets){const r=await assets.upload(f);asset={id:r.id,url:r.url||"",nombre:f.name,tipo:"Estado de cuenta",fecha:iso(today()),size:r.sizeBytes||f.size,mime:f.type};}}catch(e){}
   if(upMode==="compra"){$("#fTitle")&&($("#fTitle").textContent="Leyendo tu compra");await runCompraImport(f,f.type,asset,upHint);}
   else if(upMode==="pago"){$("#fTitle")&&($("#fTitle").textContent="Leyendo tu comprobante de pago");await runPagoImport(f,f.type,asset,upHint);}
   else await runImport(f,f.type,asset,upHint);
@@ -1136,7 +1360,7 @@ function ensurePdf(){if(!pdfReady){const base="https://cdnjs.cloudflare.com/ajax
   pdfReady=loadScript(base+"pdf.min.js").then(()=>loadScript(base+"pdf.worker.min.js")).then(()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return window.pdfjsLib;});}
   return pdfReady;}
 async function runImport(blob,mime,asset,hintId){
-  const fail=msg=>{$("#ovF").classList.remove("busy");$("#fBody").innerHTML=`<h2 id="fTitle">No se pudo leer</h2><p>${esc(msg)}</p><div class="actions"><button type="button" class="primary" id="fClose2">Cerrar</button></div>`;$("#fClose2").onclick=closeFicha;};
+  const fail=msg=>{$("#ovF").classList.remove("busy");$("#fBody").innerHTML=`<h2 id="fTitle">No se pudo leer</h2><p>${esc(msg)}</p><div class="actions"><button type="button" id="fManual">Capturar a mano</button><button type="button" class="primary" id="fClose2">Cerrar</button></div>`;$("#fClose2").onclick=closeFicha;$("#fManual").onclick=()=>manualEstado(hintId);};
   try{
     const sample=await window.claude.use("sample");if(!sample) return fail("La lectura con Claude no está disponible en esta vista.");
     $("#progMsg")&&($("#progMsg").textContent="Sacando el texto del documento…");
@@ -1157,11 +1381,11 @@ Devuelve SOLO un objeto JSON válido con esta forma (números sin $ ni comas; nu
 Alertas (máximo 5): intereses o comisiones cobradas en el periodo, planes de pago con comisión, cargos repetidos o que parezcan no reconocidos, suscripciones duplicadas, uso alto de la línea, fecha límite muy cercana. Para tarjetas de cargo (como Amex Gold), pagoSinIntereses es el total a pagar.`+(inp.text?"\n\nTEXTO DEL DOCUMENTO:\n"+inp.text:"\n\nEl documento va en las imágenes adjuntas.");
     const opts={modelTier:"complex"};if(!inp.text) opts.images=inp.images;
     let v;
-    try{v=await sample.json(prompt,opts);}catch(e){if(e&&(e.code==="rate_limited"||e.code==="not_granted"))throw e;const r=await sample(prompt,opts);const m=(r.text||"").match(/\{[\s\S]*\}/);v=m?JSON.parse(m[0]):null;}
+    try{v=await sample.json(prompt,opts);}catch(e){if(e&&["rate_limited","not_granted","limite","sin_sesion","red","no_permitido"].includes(e.code))throw e;const r=await sample(prompt,opts);const m=(r.text||"").match(/\{[\s\S]*\}/);v=m?JSON.parse(m[0]):null;}
     if(!v||typeof v!=="object") return fail("Claude no pudo sacar los datos. Intenta de nuevo.");
     $("#ovF").classList.remove("busy");
     reviewImport(v,asset,hintId);
-  }catch(e){fail(e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
+  }catch(e){fail(e&&e.code==="limite"?"Llegaste al límite de lecturas de este mes.":e&&e.code==="red"?"No hay conexión con el lector. Revisa tu internet.":e&&e.code==="sin_sesion"?"Tu sesión expiró. Cierra y vuelve a abrir la app.":e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
 }
 function guessCard(v,hintId){
   if(v.tarjetaId&&tarjetas.find(t=>t.id===v.tarjetaId)) return v.tarjetaId;
@@ -1208,7 +1432,7 @@ function reviewImport(v,asset,hintId){
 async function analyzeDoc(i){
   const t=tarjetas.find(x=>x.id===fichaId);if(!t)return;const d=(t.documentos||[])[i];if(!d)return;
   progress("Abriendo "+d.nombre+"…");
-  try{const res=await fetch("/_blob/"+d.id);const blob=await res.blob();await runImport(blob,d.mime||blob.type,null,t.id);}catch(e){closeFicha();toast("No pude abrir el documento.");}
+  try{if(!d.url)throw 0;const res=await fetch(d.url);const blob=await res.blob();await runImport(blob,d.mime||blob.type,null,t.id);}catch(e){closeFicha();toast("No pude abrir el documento.");}
 }
 async function delDocAt(i){const t=tarjetas.find(x=>x.id===fichaId);if(!t)return;
   const d=(t.documentos||[])[i];if(!d)return;
@@ -1258,14 +1482,7 @@ function mdLite(s){
   if(inUl)h+="</ul>";return h;
 }
 function showAI(a){$("#aiOut").dataset.loaded="1";$("#aiOut").innerHTML=mdLite(a.texto)+`<p class="muted" style="font-size:12px">Generado el ${fd(a.fecha)}.</p>`;}
-$("#btnAI").textContent="Copiar para Claude";
-$("#aiOut").innerHTML='<p class="muted">Presiona “Copiar para Claude”, abre Claude y pega: te dará un diagnóstico, qué te cuesta más y un plan para bajar tu deuda.</p>';
 $("#btnAI").addEventListener("click",async()=>{
-  const data={hoy:iso(today()),tarjetas:tarjetas.map(t=>({tarjeta:t.nombre,estatus:t.estatus,fechaLimite:t.fechaLimite,porPagar:restanteDe(t),saldoTotal:t.saldoTotal,limite:t.limite,condiciones:t.condiciones})),comprasAMeses:msi.filter(m=>msiRest(m)>0).map(m=>({tarjeta:cardName(m.tarjeta),compra:m.compra,mensualidad:m.mensualidad,pagosRestantes:msiRest(m)}))};
-  const txt="Analiza mis tarjetas de crédito: diagnóstico, lo más urgente, lo que me cuesta dinero, plan para bajar mi deuda y qué tarjetas revisar o cancelar.\n\n"+JSON.stringify(data);
-  try{await navigator.clipboard.writeText(txt);toast("Copiado. Pégalo en Claude.");}catch(e){toast("No se pudo copiar.");}
-});
-document.createElement("i").addEventListener("x",async()=>{
   const out=$("#aiOut");const btn=$("#btnAI");btn.disabled=true;out.innerHTML='<p class="muted">Claude está revisando tus tarjetas…</p>';
   try{
     const sample=await window.claude.use("sample");if(!sample){out.innerHTML='<p class="muted">El análisis con Claude no está disponible en esta vista.</p>';return;}
@@ -1291,12 +1508,12 @@ ${JSON.stringify(data)}`;
 
 /* ---------- pestañas ---------- */
 function showTab(name){
-  ["pagos","tarjetas","analisis"].forEach(n=>{$("#tab-"+n).hidden=n!==name;});
+  ["pagos","tarjetas","compras","analisis"].forEach(n=>{$("#tab-"+n).hidden=n!==name;});window.scrollTo(0,0);
   document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===name));
   if(location.hash!=="#"+name&&name!=="pagos") history.replaceState(null,"","#"+name); else if(name==="pagos"&&location.hash) history.replaceState(null,"",location.pathname+location.search);
 }
 $("#tabs").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)showTab(b.dataset.tab);});
-window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(["tarjetas","analisis"].includes(h))showTab(h);});
+window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(["tarjetas","compras","analisis"].includes(h))showTab(h);});
 document.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.dataset.ficha) openFicha(b.dataset.ficha);
