@@ -490,6 +490,10 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
 .pamt{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.pamt b{font-size:17px;font-weight:800}
 .ptype{font-style:normal;font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px}
 .ptype.real{background:var(--green-soft);color:var(--green)}.ptype.est{background:var(--amber-soft);color:var(--amber)}.ptype.sup{background:var(--gray-soft);color:var(--muted)}
+
+.fijos{display:flex;flex-direction:column;gap:8px;background:var(--gray-soft);border-radius:14px;padding:12px 14px}
+.fijos label.check{font-size:16px;font-weight:600;color:var(--ink)}
+.fijos input[type=checkbox]{width:22px;height:22px;min-height:0}
 </style>
 </head>
 <body>
@@ -879,6 +883,7 @@ function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>
       <div class="wide"><span>Uso de tu línea${t.limite?" ("+money(t.limite)+")":""}</span>${usoPct===null?'<b>—</b>':`<div class="ubar"><i style="width:${Math.min(100,usoPct)}%;background:${usoPct>30?(usoPct>60?"var(--red)":"var(--orange)"):"var(--green)"}"></i></div><small>${usoPct}% usado · lo ideal es menos de 30% (${money(saldoIdeal(t))})</small>`}</div>
     </div>
     ${t.usoIdeal?`<p class="cuse">💡 <b>Úsala para:</b> ${esc(t.usoIdeal)}</p>`:""}
+    ${Number(t.fijoMensual)>0?`<p class="cuse">🔁 <b>Cargos fijos:</b> ${money(t.fijoMensual)} al mes${(t.cargosFijos||[]).filter(x=>x.cadaMes).length?" ("+esc(t.cargosFijos.filter(x=>x.cadaMes).map(x=>x.concepto).join(", "))+")":""}</p>`:""}
     ${al.length?`<div class="alerts">${al.map(z=>`<div class="alert ${z.n==="alta"?"red":z.n==="media"?"orange":"amber"}"><span>${esc(z.x)}</span></div>`).join("")}</div>`:""}
     <div class="cacts"><button type="button" class="primary" id="cdPay">Registrar pago</button><button type="button" id="cdUp">Subir estado de cuenta</button><button type="button" id="cdEdit">Editar datos de la tarjeta</button><button type="button" id="cdAll">Ver todo: beneficios, condiciones y documentos</button></div>`;
   $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);$("#cdEdit").onclick=()=>editCard(t.id);}
@@ -1582,8 +1587,10 @@ Si la tarjeta registrada trae "instrucciones", síguelas (por ejemplo, no contar
 Devuelve SOLO un objeto JSON válido con esta forma (números sin $ ni comas; null si no aparece; no inventes):
 {"tarjetaId":string|null,"banco":string,"producto":string,"terminacion":"últimos 3-4 dígitos","tipo":"credito"|"cargo","fechaCorte":"YYYY-MM-DD","fechaLimite":"YYYY-MM-DD","pagoSinIntereses":número,"pagoMinimo":número|null,"saldoTotal":número (saldo deudor total, incluye lo que falta de compras a meses),"limite":número|null,"disponible":número|null,"tasaAnual":número|null,"cat":número|null,"anualidad12m":número|null,"comisiones12m":número|null,"intereses12m":número|null,"interesesPeriodo":número|null,"comisionesPeriodo":número|null,
 "comprasMeses":[{"compra":"comercio (fecha de compra)","mensualidad":número,"pagoActual":número (mensualidades ya cobradas incluyendo la de este corte),"totalPagos":número,"saldoPendiente":número (lo que falta después de este corte),"montoOriginal":número}],
+"cargosFijos":[{"concepto":"nombre corto (Netflix, Telmex, Spotify, Google One, gimnasio, seguro…)","monto":número,"frecuencia":"mensual"|"anual"}],
 "resumen":"2 frases sencillas: cuánto pagar y antes de cuándo, y lo más importante",
 "alertas":[{"nivel":"alta"|"media"|"baja","texto":"frase corta y concreta"}]}
+cargosFijos: solo cargos que se repiten solos (suscripciones, servicios domiciliados, seguros, membresías), del titular; no incluyas compras normales ni mensualidades de compras a meses. Si el nombre o el monto sugieren que es anual (por ejemplo, un plan de Google One, Amazon Prime o una anualidad), marca "anual". Si no hay, devuelve [].
 Alertas (máximo 5): intereses o comisiones cobradas en el periodo, planes de pago con comisión, cargos repetidos o que parezcan no reconocidos, suscripciones duplicadas, uso alto de la línea, fecha límite muy cercana. Para tarjetas de cargo (como Amex Gold), pagoSinIntereses es el total a pagar.`+(inp.text?"\n\nTEXTO DEL DOCUMENTO:\n"+inp.text:"\n\nEl documento va en las imágenes adjuntas.");
     const opts={modelTier:"complex"};if(!inp.text) opts.images=inp.images;
     let v;
@@ -1609,6 +1616,7 @@ function reviewImport(v,asset,hintId){
     <div class="kv"><div><span>Fecha límite</span><b>${fd(v.fechaLimite,true)}</b></div><div><span>Pago sin intereses</span><b>${money(v.pagoSinIntereses)}</b></div><div><span>Pago mínimo</span><b>${v.pagoMinimo==null?"—":money(v.pagoMinimo)}</b></div>
       <div><span>Saldo total</span><b>${money(v.saldoTotal)}</b></div><div><span>Límite</span><b>${v.limite==null?"—":money(v.limite)}</b></div><div><span>Tasa anual</span><b>${v.tipo==="cargo"?"Cargo":pct(v.tasaAnual)}</b></div></div>
     <p class="muted" style="margin:0">${m.length} compras a meses${m.length?" · "+money(m.reduce((s,x)=>s+Number(x.mensualidad||0),0))+" al mes":""}. Al guardar, reemplazan las que tenía esta tarjeta.</p>
+    ${(v.cargosFijos||[]).length?`<div class="fijos"><b>Cargos que se repiten</b><small class="muted">Marca los que se cobran cada mes: se suman a “Lo que viene”.</small>${v.cargosFijos.map((x,i)=>`<label class="check"><input type="checkbox" data-fijo="${i}" ${x.frecuencia!=="anual"?"checked":""}> ${esc(x.concepto||"Cargo")} · ${money(x.monto)}${x.frecuencia==="anual"?" <span class=\"muted\">(parece anual)</span>":""}</label>`).join("")}</div>`:""}
     ${(v.alertas||[]).length?`<div class="alist">${v.alertas.map(z=>`<div><span class="chip ${NIV[z.nivel]?NIV[z.nivel].c:"gray"}">${NIV[z.nivel]?NIV[z.nivel].t:"Info"}</span><span>${esc(z.texto)}</span></div>`).join("")}</div>`:""}
     <div class="modal-foot"><button type="button" id="impCancel">Cancelar</button><button type="button" class="primary" id="impSave">Guardar</button></div>`;
   $("#impCancel").onclick=closeFicha;
@@ -1621,7 +1629,10 @@ function reviewImport(v,asset,hintId){
       ["tasaAnual","cat","anualidad12m","comisiones12m","intereses12m"].forEach(k=>{if(v[k]!=null&&v[k]!=="")c[k]=Number(v[k]);});
       if(v.tipo)c.tipo=v.tipo;c.fuente="Estado de cuenta corte "+fd(v.fechaCorte);
       const pago=Number(v.pagoSinIntereses||0);
-      const n=Object.assign({},old,{banco:old.banco||v.banco,fechaCorte:v.fechaCorte||old.fechaCorte,fechaLimite:v.fechaLimite||old.fechaLimite,pagoSinIntereses:pago,pagoMinimo:v.pagoMinimo==null?null:Number(v.pagoMinimo),
+      const cf=(v.cargosFijos||[]);let extra={};
+      if(cf.length){const sel=[...document.querySelectorAll("[data-fijo]")].filter(x=>x.checked).map(x=>cf[Number(x.dataset.fijo)]);
+        extra={fijoMensual:Math.round(sel.reduce((a,x)=>a+Number(x.monto||0),0)*100)/100,cargosFijos:cf.map((x,i)=>({concepto:String(x.concepto||"Cargo"),monto:Number(x.monto||0),frecuencia:x.frecuencia==="anual"?"anual":"mensual",cadaMes:!!(document.querySelector(`[data-fijo="${i}"]`)||{}).checked}))};}
+      const n=Object.assign({},old,extra,{banco:old.banco||v.banco,fechaCorte:v.fechaCorte||old.fechaCorte,fechaLimite:v.fechaLimite||old.fechaLimite,pagoSinIntereses:pago,pagoMinimo:v.pagoMinimo==null?null:Number(v.pagoMinimo),
         saldoTotal:v.saldoTotal==null?old.saldoTotal:Number(v.saldoTotal),limite:v.limite==null?(old.limite??null):Number(v.limite),disponible:v.disponible==null?(old.disponible??null):Number(v.disponible),
         estatus:pago>0?"Pendiente":"Sin saldo",estimado:false,condiciones:c,pagadoCiclo:0,
         ultimoEstado:{resumen:v.resumen||"",alertas:v.alertas||[],fechaCorte:v.fechaCorte,documento:asset?asset.nombre:"",leido:iso(today())},
@@ -1631,7 +1642,7 @@ function reviewImport(v,asset,hintId){
       const viejas=msi.filter(x=>x.tarjeta===id);
       for(const x of viejas){await delDoc("msi",x.id);}
       let k=0;for(const x of (v.comprasMeses||[])){k++;await saveDoc("msi",id+"-"+(v.fechaCorte||iso(today())).replace(/-/g,"")+"-"+k,{tarjeta:id,compra:String(x.compra||"Compra a meses"),mensualidad:Number(x.mensualidad||0),pagoActual:Number(x.pagoActual||0),totalPagos:Number(x.totalPagos||0),saldoPendiente:Number(x.saldoPendiente||0),montoOriginal:x.montoOriginal==null?null:Number(x.montoOriginal),ultimoCorte:v.fechaCorte||iso(today())});}
-      closeFicha();toast((n.nombre||"Tarjeta")+" actualizada: "+(pago>0?"paga "+money(pago)+" antes del "+fd(n.fechaLimite):"sin saldo por pagar"));
+      closeFicha();toast((n.nombre||"Tarjeta")+" actualizada"+(extra.fijoMensual?" (cargos fijos "+money(extra.fijoMensual)+"/mes)":"")+": "+(pago>0?"paga "+money(pago)+" antes del "+fd(n.fechaLimite):"sin saldo por pagar"));
     }catch(e){$("#impSave").disabled=false;toast("No se pudo guardar. Intenta de nuevo.");}
   };
 }
