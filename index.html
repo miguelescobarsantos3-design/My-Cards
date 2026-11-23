@@ -475,6 +475,21 @@ html[data-size="grande"] .bottomnav button span:not(.count){font-size:12px}
 .overlay{overflow-x:hidden}
 @media (max-width:440px){.form{grid-template-columns:minmax(0,1fr)}.overlay{padding:12px 8px}.modal{padding:18px 16px}}
 html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
+
+/* Lo que viene */
+.pmes{border-top:1px solid var(--line);padding:6px 0}
+.pmes:first-child{border-top:0}
+.pmes summary{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;font-family:var(--display);font-weight:800;font-size:18px;min-height:46px}
+.pmes summary::-webkit-details-marker{display:none}
+.pmes summary b{font-size:19px}
+.prow2{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px dashed var(--line)}
+.pday{display:flex;flex-direction:column;align-items:center;width:40px;flex:none;line-height:1.1}
+.pday b{font-size:20px;font-weight:900}.pday small{font-size:12px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.prow2 .bank-av{width:38px;height:38px;border-radius:11px;font-size:11px}
+.pinfo2{flex:1;min-width:0;display:flex;flex-direction:column}.pinfo2 b{font-size:16px}.pinfo2 small{font-size:13px;color:var(--muted)}
+.pamt{display:flex;flex-direction:column;align-items:flex-end;gap:3px}.pamt b{font-size:17px;font-weight:800}
+.ptype{font-style:normal;font-size:11px;font-weight:800;border-radius:6px;padding:1px 6px}
+.ptype.real{background:var(--green-soft);color:var(--green)}.ptype.est{background:var(--amber-soft);color:var(--amber)}.ptype.sup{background:var(--gray-soft);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -524,6 +539,12 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
       </div>
     </div>
     <div class="plist" id="tbTarjetas"><div class="empty">Cargando tus tarjetas…</div></div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><h2>Lo que viene</h2><span class="status-line">Próximos 3 meses · incluye suposiciones</span></div>
+    <div id="proy"></div>
+    <p class="muted" style="margin:10px 0 0;font-size:14px"><b>Estimado</b> = mensualidades a meses que ya debes + cargos fijos de cada tarjeta. Lo que compres después se suma. Pon los cargos fijos en Mis tarjetas → Editar datos.</p>
   </section>
 
   <section class="card">
@@ -825,6 +846,26 @@ function renderCarousel(){const box=document.getElementById("carousel");if(!box)
     return `<button type="button" class="slim ${t.id===selCard?"sel":""}" data-sel="${esc(t.id)}" style="background:linear-gradient(120deg,${c} 0%,${shade(c,.62)} 100%)"><span class="sl"><small>${esc(t.banco||"")} •••• ${esc(term)}</small><b>${esc(t.nombre.replace(/·\s*\d+.*/,"").trim())}</b></span><span class="sr"><b class="num">${money(restanteDe(t))}</b><small class="${d!==null&&d<=Number(config.diasAviso||3)?"hot":""}">${d===null?"":d<0?"VENCIDA":d===0?"vence HOY":d===1?"vence MAÑANA":"vence en "+d+" días"}</small></span></button>`;}).join(""):'<div class="empty" style="padding:12px">🎉 No tienes pagos pendientes.</div>';
   const keep=box.scrollLeft;box.innerHTML=list.map(plasticHtml).join("");box.scrollLeft=keep;
   renderCardDetail();setTimeout(carArrows,50);}
+function proyeccion(meses){
+  const hoy=today(),fin=new Date(hoy.getFullYear(),hoy.getMonth()+meses+1,0),out=[];
+  tarjetas.forEach(t=>{if(!t.fechaLimite)return;const fijo=Number(t.fijoMensual||0);
+    const mis=msi.filter(m=>m.tarjeta===t.id&&msiRest(m)>0);
+    for(let k=0;k<=meses+1;k++){const f=addMonths(t.fechaLimite,k);const d=parseD(f);if(!d||d>fin)break;
+      if(k===0){if(isPend(t)&&restanteDe(t)>0)out.push({t,f,v:restanteDe(t),tipo:t.estimado?"est":"real",det:t.estimado?"aún no sale el corte":"de tu estado de cuenta"});continue;}
+      if(d<hoy)continue;
+      const ms=mis.filter(m=>msiRest(m)>=k);const vm=ms.reduce((s,m)=>s+Number(m.mensualidad||0),0);const v=vm+fijo;
+      if(v>0)out.push({t,f,v,tipo:"sup",det:[ms.length?ms.length+(ms.length===1?" mensualidad":" mensualidades")+" a meses":"",fijo?"cargos fijos "+money(fijo):""].filter(Boolean).join(" + ")});}
+  });
+  return out.sort((a,b)=>a.f.localeCompare(b.f));
+}
+function renderProyeccion(){const box=$("#proy");if(!box)return;const items=proyeccion(3);
+  if(!items.length){box.innerHTML='<div class="empty">No hay pagos por venir con los datos que tienes.</div>';return;}
+  const g={};items.forEach(x=>{const d=parseD(x.f);const k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");(g[k]=g[k]||[]).push(x);});
+  const MESL=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  box.innerHTML=Object.keys(g).sort().map((k,i)=>{const L=g[k],tot=L.reduce((s,x)=>s+x.v,0),[y,m]=k.split("-").map(Number),sup=L.some(x=>x.tipo!=="real");
+    return `<details class="pmes" ${i<2?"open":""}><summary><span>${MESL[m-1]} ${y}</span><b class="num">${sup?"~":""}${money(tot)}</b></summary>
+      ${L.map(x=>{const d=parseD(x.f);return `<div class="prow2"><span class="pday"><b>${d.getDate()}</b><small>${MESES[d.getMonth()]}</small></span>${bankAv(x.t)}<span class="pinfo2"><b>${esc(x.t.nombre.replace(/·.*$/,"").trim())}</b><small>${esc(x.det)}</small></span><span class="pamt"><b class="num">${x.tipo!=="real"?"~":""}${money(x.v)}</b><i class="ptype ${x.tipo}">${x.tipo==="real"?"Real":x.tipo==="est"?"Estimado":"Suposición"}</i></span></div>`;}).join("")}</details>`;}).join("");
+}
 function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>x.id===selCard);if(!t){box.hidden=true;return;}box.hidden=false;
   const c=t.condiciones||{},u=usoDe(t),d=daysTo(t.fechaLimite),al=condAlerts(t).sort((a,b)=>"alta media baja".indexOf(a.n)-"alta media baja".indexOf(b.n)).slice(0,2);
   const pago=isPend(t)?`<div class="cpay ${d!==null&&d<0?"late":d!==null&&d<=Number(config.diasAviso||3)?"soon":""}"><span>Tienes que pagar</span><b class="num">${money(restanteDe(t))}</b><span>${d===null?"":d<0?"Venció el "+fd(t.fechaLimite,true):d===0?"Vence HOY":"Antes del "+fd(t.fechaLimite,true)+" · faltan "+d+" días"}${t.estimado?" · estimado":""}</span></div>`
@@ -839,8 +880,8 @@ function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>
     </div>
     ${t.usoIdeal?`<p class="cuse">💡 <b>Úsala para:</b> ${esc(t.usoIdeal)}</p>`:""}
     ${al.length?`<div class="alerts">${al.map(z=>`<div class="alert ${z.n==="alta"?"red":z.n==="media"?"orange":"amber"}"><span>${esc(z.x)}</span></div>`).join("")}</div>`:""}
-    <div class="cacts"><button type="button" class="primary" id="cdPay">Registrar pago</button><button type="button" id="cdUp">Subir estado de cuenta</button><button type="button" id="cdAll">Ver todo: beneficios, condiciones y documentos</button></div>`;
-  $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);}
+    <div class="cacts"><button type="button" class="primary" id="cdPay">Registrar pago</button><button type="button" id="cdUp">Subir estado de cuenta</button><button type="button" id="cdEdit">Editar datos de la tarjeta</button><button type="button" id="cdAll">Ver todo: beneficios, condiciones y documentos</button></div>`;
+  $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);$("#cdEdit").onclick=()=>editCard(t.id);}
 function carMove(dir){const c=$("#carousel");if(!c)return;const w=(c.querySelector(".plastic")||{}).offsetWidth||260;c.scrollBy({left:dir*(w+12),behavior:"smooth"});}
 function carArrows(){const c=$("#carousel");if(!c)return;const max=c.scrollWidth-c.clientWidth-4;
   document.querySelector(".carnav.prev").disabled=c.scrollLeft<=4;document.querySelector(".carnav.next").disabled=c.scrollLeft>=max;}
@@ -912,6 +953,7 @@ function render(){
       <div class="pright"><b class="num">${money(pend?restanteDe(t):t.pagoSinIntereses)}</b>${pend?`<button class="paybtn" data-pay="${esc(t.id)}" type="button">Ya pagué</button>`:chip}</div>
       ${pend?`<div class="pchip">${chip}</div>`:""}</div>`;}).join(""):`<div class="empty">${tarjetas.length?"No tienes pagos pendientes. Todo al día.":"Aún no hay tarjetas."}</div>`;
   renderCarousel();
+  try{renderProyeccion();}catch(e){console.error(e);}
 
   // barras
   $("#bars").innerHTML=tarjetas.filter(t=>Number(t.limite)>0).sort((a,b)=>(b.saldoTotal/b.limite)-(a.saldoTotal/a.limite)).map(t=>{
@@ -1103,6 +1145,7 @@ function cardFields(t){return [
   {k:"saldoTotal",label:"Saldo total (con meses)",type:"number",value:t.saldoTotal},
   {k:"limite",label:"Límite de crédito",type:"number",value:t.limite},
   {k:"disponible",label:"Crédito disponible",type:"number",value:t.disponible},
+  {k:"fijoMensual",label:"Cargos fijos cada mes (Netflix, Telmex, etc.)",type:"number",value:t.fijoMensual},
   {k:"estimado",label:"El monto es estimado (aún no sale el corte)",type:"check",value:t.estimado},
   {k:"notas",label:"Nota corta",value:t.notas,full:true},
   {k:"revisarTxt",label:"Cosas por revisar (una por línea)",type:"area",value:(t.revisar||[]).join("\n")}
