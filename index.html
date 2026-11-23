@@ -714,11 +714,14 @@ window.STANDALONE=true;
     const m=String(u).match(/^data:([^;]+);base64,(.*)$/);return{tipo:m?m[1]:"image/jpeg",datos:m?m[2]:""};
   }
   async function llamar(prompt,opts,json){
-    opts=opts||{};const tok=await window.__fb.idToken();
+    opts=opts||{};
     const imagenes=await Promise.all((opts.images||[]).map(toImg));
-    let r;try{r=await fetch(FUNC_URL,{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json"},body:JSON.stringify({prompt,imagenes,nivel:opts.modelTier||"default",json:!!json})});}
+    const body=JSON.stringify({prompt,imagenes,nivel:opts.modelTier||"default",json:!!json});
+    const enviar=async fresco=>{const tok=await window.__fb.idToken(fresco);return fetch(FUNC_URL,{method:"POST",headers:{"Authorization":"Bearer "+tok,"Content-Type":"application/json"},body});};
+    let r;try{r=await enviar(false);if(r.status===401||r.status===403)r=await enviar(true);}
     catch(e){const x=new Error("red");x.code="red";throw x;}
     const d=await r.json().catch(()=>({}));
+    if(!r.ok)console.warn("Lector:",r.status,d);
     if(!r.ok){const x=new Error(d.error||"error");x.code=r.status===429?"limite":r.status===503?"rate_limited":r.status===401?"sin_sesion":(d.error||"error");throw x;}
     return d.texto||"";
   }
@@ -773,7 +776,7 @@ window.__fb={
   replaceAll:(data)=>setDoc(ref,data),
   logout:()=>signOut(auth).then(()=>location.reload()),
   user:null,isAdmin:false,
-  idToken:()=>auth.currentUser.getIdToken(),
+  idToken:f=>auth.currentUser.getIdToken(!!f),
   upload:async f=>{const uid=auth.currentUser.uid;const id=Date.now().toString(36)+"_"+String(f.name||"documento").replace(/[^\w.\-]/g,"_").slice(-60);
     const r=sref(st,"usuarios/"+uid+"/docs/"+id);await uploadBytes(r,f,{contentType:f.type||"application/octet-stream"});
     return{id,sizeBytes:f.size,url:await getDownloadURL(r)};},
@@ -1757,7 +1760,7 @@ Alertas (máximo 5): intereses o comisiones cobradas en el periodo, planes de pa
     if(!v||typeof v!=="object") return fail("Claude no pudo sacar los datos. Intenta de nuevo.");
     $("#ovF").classList.remove("busy");
     reviewImport(v,asset,hintId);
-  }catch(e){fail(e&&e.code==="limite"?"Llegaste al límite de lecturas de este mes.":e&&e.code==="red"?"No hay conexión con el lector. Revisa tu internet.":e&&e.code==="sin_sesion"?"Tu sesión expiró. Cierra y vuelve a abrir la app.":e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
+  }catch(e){fail(e&&e.code==="limite"?"Llegaste al límite de lecturas de este mes.":e&&e.code==="no_permitido"?"Tu cuenta todavía no tiene permiso para el lector automático. Cierra sesión (Ajustes → Cerrar sesión), vuelve a entrar y prueba otra vez. Si sigue, avísale a quien te invitó.":e&&e.code==="red"?"No hay conexión con el lector. Revisa tu internet.":e&&e.code==="sin_sesion"?"Tu sesión expiró. Cierra y vuelve a abrir la app.":e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
 }
 function guessCard(v,hintId){
   if(v.tarjetaId&&tarjetas.find(t=>t.id===v.tarjetaId)) return v.tarjetaId;
