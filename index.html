@@ -1717,9 +1717,30 @@ function progress(msg){
   $("#fBody").innerHTML=`<h2 id="fTitle">Leyendo tu estado de cuenta</h2><p class="muted" id="progMsg">${esc(msg)}</p><div class="bar"><span style="width:100%;opacity:.5"></span></div>`;
   $("#ovF").classList.add("open","busy");
 }
+function pedirClavePdf(mal){return new Promise(res=>{
+  const ov=$("#ovF");const prev=$("#fBody").innerHTML;ov.classList.remove("busy");
+  $("#fBody").innerHTML=`<h2 id="fTitle">Este PDF tiene contraseña</h2>
+    <p style="margin:0">${mal?'<b style="color:var(--red)">Esa contraseña no abrió el archivo.</b> ':''}Escribe la contraseña del estado de cuenta. Normalmente el banco usa tu <b>RFC</b> (con o sin homoclave) o tu <b>fecha de nacimiento</b>; viene en el correo donde te lo mandaron.</p>
+    <label for="pdfPw">Contraseña del PDF<input id="pdfPw" type="password" autocomplete="off" autocapitalize="characters"></label>
+    <label class="check"><input type="checkbox" id="pdfVer" style="width:22px;height:22px;min-height:0"> Mostrar lo que escribo</label>
+    <p class="muted" style="margin:0;font-size:14px">La contraseña solo se usa para abrir el archivo en tu celular; no se guarda.</p>
+    <div class="modal-foot"><button type="button" id="pdfNo">Cancelar</button><button type="button" class="primary" id="pdfSi">Abrir</button></div>`;
+  ov.classList.add("open");setTimeout(()=>$("#pdfPw").focus(),50);
+  $("#pdfVer").onchange=()=>{$("#pdfPw").type=$("#pdfVer").checked?"text":"password";};
+  const fin=v=>{$("#fBody").innerHTML=prev;ov.classList.add("busy");res(v);};
+  $("#pdfSi").onclick=()=>{const v=$("#pdfPw").value.trim();if(!v){toast("Escribe la contraseña.");return;}fin(v);};
+  $("#pdfPw").onkeydown=e=>{if(e.key==="Enter")$("#pdfSi").click();};
+  $("#pdfNo").onclick=()=>fin(null);
+});}
 async function blobToInput(blob,mime){
   if((mime||blob.type||"").startsWith("image/")) return {text:"",images:[blob]};
-  const lib=await ensurePdf();const pdf=await lib.getDocument({data:await blob.arrayBuffer()}).promise;
+  const lib=await ensurePdf();const buf=await blob.arrayBuffer();
+  let pdf=null,pw=undefined,intento=0;
+  while(!pdf){
+    try{pdf=await lib.getDocument({data:buf.slice(0),password:pw}).promise;}
+    catch(e){if(!e||e.name!=="PasswordException")throw e;
+      pw=await pedirClavePdf(intento++>0);if(pw===null){const x=new Error("cancelado");x.code="cancelado";throw x;}}
+  }
   let text="";for(let i=1;i<=pdf.numPages&&text.length<90000;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();text+="\n[Página "+i+"]\n"+tc.items.map(x=>x.str).join(" ");}
   if(text.replace(/\s|\[Página \d+\]/g,"").length>400) return {text:text.slice(0,90000),images:[]};
   const imgs=[];for(let i=1;i<=Math.min(pdf.numPages,6);i++){const pg=await pdf.getPage(i);const vp=pg.getViewport({scale:1.6});const cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;imgs.push(await new Promise(r=>cv.toBlob(r,"image/jpeg",0.85)));}
@@ -1760,7 +1781,7 @@ Alertas (máximo 5): intereses o comisiones cobradas en el periodo, planes de pa
     if(!v||typeof v!=="object") return fail("Claude no pudo sacar los datos. Intenta de nuevo.");
     $("#ovF").classList.remove("busy");
     reviewImport(v,asset,hintId);
-  }catch(e){fail(e&&e.code==="limite"?"Llegaste al límite de lecturas de este mes.":e&&e.code==="no_permitido"?"Tu cuenta todavía no tiene permiso para el lector automático. Cierra sesión (Ajustes → Cerrar sesión), vuelve a entrar y prueba otra vez. Si sigue, avísale a quien te invitó.":e&&e.code==="red"?"No hay conexión con el lector. Revisa tu internet.":e&&e.code==="sin_sesion"?"Tu sesión expiró. Cierra y vuelve a abrir la app.":e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
+  }catch(e){if(e&&e.code==="cancelado"){closeFicha();return;}fail(e&&e.code==="limite"?"Llegaste al límite de lecturas de este mes.":e&&e.code==="no_permitido"?"Tu cuenta todavía no tiene permiso para el lector automático. Cierra sesión (Ajustes → Cerrar sesión), vuelve a entrar y prueba otra vez. Si sigue, avísale a quien te invitó.":e&&e.code==="red"?"No hay conexión con el lector. Revisa tu internet.":e&&e.code==="sin_sesion"?"Tu sesión expiró. Cierra y vuelve a abrir la app.":e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":e&&e.code==="not_granted"?"Necesitas aceptar el permiso para que Claude lea tus estados de cuenta.":"Algo falló al leer el archivo. Intenta de nuevo.");}
 }
 function guessCard(v,hintId){
   if(v.tarjetaId&&tarjetas.find(t=>t.id===v.tarjetaId)) return v.tarjetaId;
