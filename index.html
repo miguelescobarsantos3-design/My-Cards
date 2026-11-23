@@ -499,7 +499,7 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
 <body>
 <div class="wrap">
   <header class="topbar">
-    <div><div class="hello" id="hello">Hola, Miguel</div><div class="muted" id="hoy" style="font-size:13px"></div></div>
+    <div><div class="hello" id="hello">Hola</div><div class="muted" id="hoy" style="font-size:13px"></div></div>
     <div class="topicons">
       <button id="btnSize" type="button" class="iconbtn sizebtn" aria-label="Cambiar tamaño de letra" aria-pressed="false"><span>A</span><span class="big">A</span></button>
       <button id="btnMore" type="button" class="iconbtn" aria-label="Más opciones" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
@@ -510,6 +510,8 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
         <button id="btnMail" type="button">Enviar resumen por correo</button>
         <button id="btnBackup" type="button">Descargar respaldo</button>
         <button id="btnAddCard2" type="button">Agregar una tarjeta</button>
+        <button id="btnSug" type="button">💬 Enviar sugerencia o problema</button>
+        <button id="btnAdm" type="button" hidden>👑 Administrar usuarios</button>
       </div>
     </div>
   </header>
@@ -651,13 +653,29 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
 <input type="file" id="fileIn" accept="application/pdf,image/*" hidden>
 <div class="toast" id="toast" role="status"></div>
 
-<div id="login" style="position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px">
-  <div class="card" style="max-width:380px;width:100%;text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center">
-    <div class="logo" style="width:64px;height:64px;border-radius:20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:34px;height:34px"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></div>
-    <h1 style="font-size:24px">Mis Tarjetas</h1>
-    <p class="muted" style="margin:0">Controla tus pagos, compras a meses y alertas de todas tus tarjetas.</p>
-    <button type="button" class="primary" id="btnLogin" style="width:100%;justify-content:center;padding:12px">Entrar con Google</button>
-    <p class="muted" id="loginMsg" style="margin:0;font-size:13px"></p>
+<style>#login [hidden]{display:none!important}#ovF{z-index:60}</style>
+<div id="login" style="position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto">
+  <div class="card" style="max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;margin:auto 0">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+      <div style="width:64px;height:64px;border-radius:20px;background:var(--accent);color:#fff;display:grid;place-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:34px;height:34px"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg></div>
+      <h1 style="font-size:26px">Mis Tarjetas</h1>
+      <p class="muted" style="margin:0">Que no se te pase ningún pago de tus tarjetas.</p>
+    </div>
+    <div id="lgMain" style="display:flex;flex-direction:column;gap:12px">
+      <button type="button" class="primary" id="btnLogin" style="justify-content:center;min-height:54px;font-size:17px">Entrar con Google</button>
+      <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px"><span style="flex:1;height:1px;background:var(--line)"></span>o con tu correo<span style="flex:1;height:1px;background:var(--line)"></span></div>
+      <label id="lgNameL" hidden>Tu nombre<input id="lgName" autocomplete="name" placeholder="Ej. María López"></label>
+      <label>Correo<input id="lgEmail" type="email" autocomplete="email" inputmode="email" placeholder="tucorreo@ejemplo.com"></label>
+      <label>Contraseña<input id="lgPass" type="password" autocomplete="current-password" placeholder="Mínimo 6 letras o números"></label>
+      <button type="button" id="lgGo" style="justify-content:center;min-height:52px">Entrar con mi correo</button>
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <button type="button" class="linkbtn" id="lgSwitch">Crear cuenta nueva</button>
+        <button type="button" class="linkbtn" id="lgForgot">Olvidé mi contraseña</button>
+      </div>
+    </div>
+    <div id="lgWait" hidden style="display:flex;flex-direction:column;gap:12px;text-align:center"></div>
+    <p class="muted" id="loginMsg" style="margin:0;font-size:15px;text-align:center"></p>
+    <p class="muted" style="margin:0;font-size:12px;text-align:center">Al entrar aceptas el <a href="#" id="lgPriv" style="color:var(--accent)">aviso de privacidad</a>. Solo pueden entrar personas autorizadas.</p>
   </div>
 </div>
 <script>
@@ -722,7 +740,6 @@ window.STANDALONE=true;
 })();
 </script>
 <script type="module">
-/* ====== PEGA AQUÍ LA CONFIGURACIÓN DE TU PROYECTO FIREBASE ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyB9LdnEsooeDNDqoTyYV-eGP2v-pDWD0G8",
   authDomain: "my-cards-3a148.firebaseapp.com",
@@ -731,42 +748,103 @@ const firebaseConfig = {
   messagingSenderId: "1046915428635",
   appId: "1:1046915428635:web:d12e6c776eb8ab7879a3be"
 };
-/* ================================================================ */
+const ADMINS=["miguelescobarsantos3@gmail.com"];
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getStorage, ref as sref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, onSnapshot, deleteField, FieldPath } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const msg=t=>{const e=document.getElementById("loginMsg");if(e)e.textContent=t;};
-if(firebaseConfig.apiKey==="PEGA_AQUI"){msg("Falta pegar la configuración de Firebase en index.html.");}
-else{
-  const app=initializeApp(firebaseConfig);
-  const auth=getAuth(app);
-  const fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
-  const st=getStorage(app);st.maxUploadRetryTime=15000;st.maxOperationRetryTime=15000;
-  let ref=null,started=false;
-  window.__fb={
-    setField:(c,id,v)=>updateDoc(ref,new FieldPath(c,id),v),
-    delField:(c,id)=>updateDoc(ref,new FieldPath(c,id),deleteField()),
-    replaceAll:(data)=>setDoc(ref,data),
-    logout:()=>signOut(auth).then(()=>location.reload()),
-    user:null,
-    idToken:()=>auth.currentUser.getIdToken(),
-    upload:async f=>{const uid=auth.currentUser.uid;const id=Date.now().toString(36)+"_"+String(f.name||"documento").replace(/[^\w.\-]/g,"_").slice(-60);
-      const r=sref(st,"usuarios/"+uid+"/docs/"+id);await uploadBytes(r,f,{contentType:f.type||"application/octet-stream"});
-      return{id,sizeBytes:f.size,url:await getDownloadURL(r)};},
-    borrar:async id=>{try{await deleteObject(sref(st,"usuarios/"+auth.currentUser.uid+"/docs/"+id));}catch(e){}}
-  };
-  document.getElementById("btnLogin").onclick=async()=>{msg("Abriendo Google…");
-    try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(e){if(e&&e.code==="auth/popup-blocked")signInWithRedirect(auth,new GoogleAuthProvider());else msg("No se pudo entrar: "+(e.code||e.message));}};
-  onAuthStateChanged(auth,async u=>{
-    if(!u){document.getElementById("login").style.display="flex";return;}
-    window.__fb.user=u;document.getElementById("login").style.display="none";
-    ref=doc(fs,"usuarios",u.uid);
-    try{const snap=await getDoc(ref);if(!snap.exists())await setDoc(ref,{tarjetas:{},msi:{},compras:{},config:{},creado:new Date().toISOString(),email:u.email||""});}catch(e){}
-    onSnapshot(ref,s=>{window.__store.load(s.data()||{});if(!started){started=true;window.__store.ready();window.dispatchEvent(new Event("fb-ready"));}},
-      e=>{msg("Error de conexión: "+(e.code||e.message));document.getElementById("login").style.display="flex";});
-  });
-}
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getStorage, ref as sref, uploadBytes, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, deleteField, FieldPath, collection, getDocs, addDoc, query, orderBy, limit, writeBatch, increment, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const $i=id=>document.getElementById(id);
+try{const q=new URLSearchParams(location.search).get("invita");if(q){localStorage.setItem("mt-invita",q.trim());history.replaceState(null,"",location.pathname);}}catch(e){}
+const invitacion=()=>{try{return localStorage.getItem("mt-invita")||"";}catch(e){return "";}};
+if(invitacion()){const b=document.createElement("div");b.className="alert ok";b.innerHTML="<span>🎉 <b>Tienes una invitación.</b> Entra con Google o crea tu cuenta con tu correo y quedas dentro.</span>";const m=$i("lgMain");m.parentNode.insertBefore(b,m);}
+const msg=t=>{$i("loginMsg").textContent=t||"";};
+const ERR={"auth/invalid-credential":"Correo o contraseña incorrectos.","auth/wrong-password":"Contraseña incorrecta.","auth/user-not-found":"No hay una cuenta con ese correo. Toca “Crear cuenta nueva”.","auth/email-already-in-use":"Ese correo ya tiene cuenta. Entra con tu contraseña.","auth/weak-password":"La contraseña debe tener al menos 6 caracteres.","auth/invalid-email":"Revisa que el correo esté bien escrito.","auth/too-many-requests":"Demasiados intentos. Espera unos minutos.","auth/popup-closed-by-user":"Cerraste la ventana de Google.","auth/network-request-failed":"Sin conexión a internet."};
+const errTxt=e=>ERR[e&&e.code]||("No se pudo: "+((e&&e.code)||(e&&e.message)||"error"));
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);auth.languageCode="es";
+const st=getStorage(app);st.maxUploadRetryTime=15000;st.maxOperationRetryTime=15000;
+const fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});
+let ref=null,started=false,modoCrear=false;
+const correoDe=u=>String((u&&u.email)||"").toLowerCase();
+const esAdmin=u=>ADMINS.includes(correoDe(u));
+window.__fb={
+  setField:(c,id,v)=>updateDoc(ref,new FieldPath(c,id),v),
+  delField:(c,id)=>updateDoc(ref,new FieldPath(c,id),deleteField()),
+  replaceAll:(data)=>setDoc(ref,data),
+  logout:()=>signOut(auth).then(()=>location.reload()),
+  user:null,isAdmin:false,
+  idToken:()=>auth.currentUser.getIdToken(),
+  upload:async f=>{const uid=auth.currentUser.uid;const id=Date.now().toString(36)+"_"+String(f.name||"documento").replace(/[^\w.\-]/g,"_").slice(-60);
+    const r=sref(st,"usuarios/"+uid+"/docs/"+id);await uploadBytes(r,f,{contentType:f.type||"application/octet-stream"});
+    return{id,sizeBytes:f.size,url:await getDownloadURL(r)};},
+  borrar:async id=>{try{await deleteObject(sref(st,"usuarios/"+auth.currentUser.uid+"/docs/"+id));}catch(e){}},
+  comentario:async texto=>{const u=auth.currentUser;await addDoc(collection(fs,"comentarios"),{uid:u.uid,email:correoDe(u),nombre:u.displayName||"",texto:String(texto).slice(0,3000),fecha:new Date().toISOString(),version:document.querySelector('meta[name="app-version"]')?.content||""});},
+  borrarCuenta:async()=>{const u=auth.currentUser;
+    try{const l=await listAll(sref(st,"usuarios/"+u.uid+"/docs"));await Promise.all(l.items.map(x=>deleteObject(x).catch(()=>{})));}catch(e){}
+    await deleteDoc(ref);try{await deleteUser(u);}catch(e){await signOut(auth);} location.reload();},
+  admin:{
+    permitidos:async()=>(await getDocs(collection(fs,"permitidos"))).docs.map(d=>({email:d.id,...d.data()})),
+    permitir:(email,nombre)=>setDoc(doc(fs,"permitidos",String(email).trim().toLowerCase()),{nombre:nombre||"",alta:new Date().toISOString(),por:correoDe(auth.currentUser)}),
+    quitar:email=>deleteDoc(doc(fs,"permitidos",email)),
+    solicitudes:async()=>(await getDocs(collection(fs,"solicitudes"))).docs.map(d=>({email:d.id,...d.data()})),
+    borrarSolicitud:email=>deleteDoc(doc(fs,"solicitudes",email)),
+    comentarios:async()=>(await getDocs(query(collection(fs,"comentarios"),orderBy("fecha","desc"),limit(100)))).docs.map(d=>({id:d.id,...d.data()})),
+    borrarComentario:id=>deleteDoc(doc(fs,"comentarios",id)),
+    uso:async()=>(await getDocs(collection(fs,"uso"))).docs.map(d=>({id:d.id,...d.data()})),
+    invitaciones:async()=>(await getDocs(collection(fs,"invitaciones"))).docs.map(d=>({codigo:d.id,...d.data()})),
+    invitar:async(nombre,personas,dias)=>{const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let c="";const r=crypto.getRandomValues(new Uint8Array(8));r.forEach(x=>c+=abc[x%abc.length]);
+      await setDoc(doc(fs,"invitaciones",c),{nombre:nombre||"",personas:Number(personas)||1,restantes:Number(personas)||1,creada:new Date().toISOString(),vence:Timestamp.fromDate(new Date(Date.now()+(dias||14)*864e5))});return c;},
+    borrarInvitacion:c=>deleteDoc(doc(fs,"invitaciones",c))
+  }
+};
+function vista(main,html){$i("lgMain").hidden=!main;$i("lgWait").hidden=main;if(!main)$i("lgWait").innerHTML=html;}
+function modo(crear){modoCrear=crear;$i("lgNameL").hidden=!crear;$i("lgGo").textContent=crear?"Crear mi cuenta":"Entrar con mi correo";$i("lgSwitch").textContent=crear?"Ya tengo cuenta":"Crear cuenta nueva";$i("lgPass").autocomplete=crear?"new-password":"current-password";msg("");}
+$i("lgSwitch").onclick=()=>modo(!modoCrear);
+$i("btnLogin").onclick=async()=>{msg("Abriendo Google…");
+  try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(e){if(e&&e.code==="auth/popup-blocked")signInWithRedirect(auth,new GoogleAuthProvider());else msg(errTxt(e));}};
+$i("lgGo").onclick=async()=>{const em=$i("lgEmail").value.trim(),pw=$i("lgPass").value;if(!em||!pw){msg("Escribe tu correo y tu contraseña.");return;}
+  $i("lgGo").disabled=true;msg(modoCrear?"Creando tu cuenta…":"Entrando…");
+  try{if(modoCrear){const nm=$i("lgName").value.trim();if(!nm){msg("Escribe tu nombre.");$i("lgGo").disabled=false;return;}
+      const c=await createUserWithEmailAndPassword(auth,em,pw);await updateProfile(c.user,{displayName:nm});await sendEmailVerification(c.user);}
+    else await signInWithEmailAndPassword(auth,em,pw);}
+  catch(e){msg(errTxt(e));}finally{$i("lgGo").disabled=false;}};
+$i("lgForgot").onclick=async()=>{const em=$i("lgEmail").value.trim();if(!em){msg("Escribe tu correo arriba y vuelve a tocar “Olvidé mi contraseña”.");return;}
+  try{await sendPasswordResetEmail(auth,em);msg("Te mandamos un correo para cambiar tu contraseña. Revisa también en Spam.");}catch(e){msg(errTxt(e));}};
+$i("lgPriv").onclick=e=>{e.preventDefault();window.mostrarPrivacidad&&window.mostrarPrivacidad();};
+const salirBtn='<button type="button" class="linkbtn" id="lgOut">Salir y entrar con otra cuenta</button>';
+async function autorizado(u){if(esAdmin(u))return true;try{return (await getDoc(doc(fs,"permitidos",correoDe(u)))).exists();}catch(e){return false;}}
+onAuthStateChanged(auth,async u=>{
+  if(!u){$i("login").style.display="flex";vista(true);return;}
+  $i("login").style.display="flex";msg("");
+  const esCorreo=u.providerData.some(p=>p.providerId==="password");
+  if(esCorreo&&!u.emailVerified){
+    vista(false,`<h2 style="font-size:20px">Confirma tu correo</h2><p style="margin:0">Te mandamos un correo a <b>${correoDe(u)}</b>. Ábrelo y toca el enlace para confirmar. Revisa también en <b>Spam</b>.</p>
+      <button type="button" class="primary" id="lgVer" style="justify-content:center;min-height:52px">Ya lo confirmé</button><button type="button" id="lgReenv" style="justify-content:center">Reenviar el correo</button>${salirBtn}`);
+    $i("lgVer").onclick=async()=>{await u.reload();if(auth.currentUser.emailVerified){await auth.currentUser.getIdToken(true);location.reload();}else msg("Todavía no aparece confirmado. Abre el enlace del correo y vuelve a intentar.");};
+    $i("lgReenv").onclick=async()=>{try{await sendEmailVerification(u);msg("Correo reenviado.");}catch(e){msg(errTxt(e));}};
+    $i("lgOut").onclick=()=>signOut(auth);return;}
+  vista(false,'<p class="muted" style="margin:0">Revisando tu acceso…</p>');
+  if(!(await autorizado(u))&&invitacion()){
+    const c=invitacion();
+    try{const b=writeBatch(fs);
+      b.set(doc(fs,"permitidos",correoDe(u)),{nombre:u.displayName||"",alta:new Date().toISOString(),codigo:c,via:"invitacion"});
+      b.update(doc(fs,"invitaciones",c),{restantes:increment(-1)});
+      await b.commit();try{localStorage.removeItem("mt-invita");}catch(e){}
+    }catch(e){try{localStorage.removeItem("mt-invita");}catch(_){} msg("Esa invitación ya se usó o venció. Puedes pedir acceso.");}
+  }
+  if(!(await autorizado(u))){
+    let ya=false;try{ya=(await getDoc(doc(fs,"solicitudes",correoDe(u)))).exists();}catch(e){}
+    vista(false,`<h2 style="font-size:20px">Tu acceso está pendiente</h2><p style="margin:0">Hola${u.displayName?" "+u.displayName.split(" ")[0]:""}. Mis Tarjetas por ahora es solo para personas invitadas. ${ya?"Ya enviaste tu solicitud: en cuanto te autoricen podrás entrar.":"Pide acceso y te avisamos cuando esté listo."}</p>
+      ${ya?'<button type="button" class="primary" id="lgRe" style="justify-content:center;min-height:52px">Volver a revisar</button>':'<button type="button" class="primary" id="lgPide" style="justify-content:center;min-height:52px">Pedir acceso</button>'}${salirBtn}`);
+    if($i("lgPide"))$i("lgPide").onclick=async()=>{try{await setDoc(doc(fs,"solicitudes",correoDe(u)),{nombre:u.displayName||"",uid:u.uid,fecha:new Date().toISOString()});msg("¡Listo! Solicitud enviada.");$i("lgPide").disabled=true;}catch(e){msg(errTxt(e));}};
+    if($i("lgRe"))$i("lgRe").onclick=()=>location.reload();
+    $i("lgOut").onclick=()=>signOut(auth);return;}
+  window.__fb.user=u;window.__fb.isAdmin=esAdmin(u);$i("login").style.display="none";
+  ref=doc(fs,"usuarios",u.uid);
+  try{const snap=await getDoc(ref);if(!snap.exists())await setDoc(ref,{tarjetas:{},msi:{},compras:{},config:{alertas:{correo:correoDe(u),diasAviso:3}},creado:new Date().toISOString(),email:correoDe(u),nombre:u.displayName||""});}catch(e){}
+  onSnapshot(ref,s=>{window.__store.load(s.data()||{});if(!started){started=true;window.__store.ready();window.dispatchEvent(new Event("fb-ready"));}},
+    e=>{$i("login").style.display="flex";vista(false,'<h2 style="font-size:20px">No se pudo abrir tus datos</h2><p style="margin:0">'+errTxt(e)+'</p>'+salirBtn);$i("lgOut").onclick=()=>signOut(auth);});
+});
 if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js").catch(()=>{});}
 </script>
 <script>
@@ -786,9 +864,9 @@ function addMonths(s,n){const d=parseD(s);if(!d)return s;const day=d.getDate();c
 function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),3800);}
 $("#hoy").textContent=fd(iso(today()),true);
-window.addEventListener("fb-ready",()=>{const u=window.__fb&&window.__fb.user;if(u&&u.displayName){const n=u.displayName.split(" ")[0];$("#hello").textContent="Hola, "+n.charAt(0).toUpperCase()+n.slice(1).toLowerCase();}});
+window.addEventListener("fb-ready",()=>{const u=window.__fb&&window.__fb.user;const n=((u&&u.displayName)||"").split(" ")[0];if(n)$("#hello").textContent="Hola, "+n.charAt(0).toUpperCase()+n.slice(1).toLowerCase();if(u&&!config.correo)config.correo=u.email||"";});
 
-let db=null, tarjetas=[], msi=[], compras=[], config={correo:"supventas@depositoelectrico.com.mx",diasAviso:3,autoCorreo:true}, configVersion=false;
+let db=null, tarjetas=[], msi=[], compras=[], config={correo:"",diasAviso:3,autoCorreo:false}, configVersion=false;
 let fTar="pend", fMsi="act";
 
 /* ---------- datos ---------- */
@@ -941,7 +1019,8 @@ function render(){
     $("#nxWhen").textContent=d===null?"Sin fecha límite":d<0?"Venció el "+fd(prox.fechaLimite,true)+" ("+Math.abs(d)+(Math.abs(d)===1?" día":" días")+")":d===0?"Vence HOY, "+fd(prox.fechaLimite,true):d===1?"Vence MAÑANA, "+fd(prox.fechaLimite,true):"Vence el "+fd(prox.fechaLimite,true)+" · faltan "+d+" días";
     hero.classList.add(d!==null&&d<0?"late":d!==null&&d<=Number(config.diasAviso||3)?"soon":"x");
     $("#btnProxPay").hidden=false;$("#btnProxPay").dataset.id=prox.id;$("#btnProxPay").textContent="Ya lo pagué";}
-  else{$("#nxLbl").textContent=tarjetas.length?"¡Muy bien!":"Bienvenido";$("#nxName").textContent=tarjetas.length?"Estás al día":"Agrega tu primera tarjeta";$("#nxAmt").textContent=tarjetas.length?"$0":"";$("#nxWhen").textContent=tarjetas.length?"No tienes pagos pendientes en este ciclo.":"Ve a “Mis tarjetas” y toca “Agregar tarjeta”.";hero.classList.add("ok");$("#btnProxPay").hidden=true;}
+  else{$("#nxLbl").textContent=tarjetas.length?"¡Muy bien!":"Bienvenido";$("#nxName").textContent=tarjetas.length?"Estás al día":"Agrega tu primera tarjeta";$("#nxAmt").textContent=tarjetas.length?"$0":"";$("#nxWhen").textContent=tarjetas.length?"No tienes pagos pendientes en este ciclo.":"Para empezar, sube el estado de cuenta de una de tus tarjetas (PDF o foto). La app lee los datos y la da de alta sola.";hero.classList.add("ok");
+    if(tarjetas.length){$("#btnProxPay").hidden=true;}else{$("#btnProxPay").hidden=false;$("#btnProxPay").dataset.id="";$("#btnProxPay").textContent="Subir mi primer estado de cuenta";}}
   const act=msi.filter(m=>msiRest(m)>0);
   $("#kMsi").textContent=money(act.reduce((s,m)=>s+Number(m.mensualidad||0),0));
   $("#kMsiSub").textContent=act.length+" compras activas · "+money(act.reduce((s,m)=>s+Number(m.saldoPendiente||0),0))+" por pagar";
@@ -1168,8 +1247,11 @@ function newCycle(id){
   openModal("Nuevo corte · "+t.nombre,cardFields(n).filter(f=>["nombre","limite","notas","revisarTxt"].indexOf(f.k)<0),o=>saveDoc("tarjetas",id,cardFromForm(n,o)));
 }
 $("#btnUpCompra2").onclick=()=>$("#btnUpCompra").click();
+$("#btnSug").onclick=()=>{$("#moreMenu").hidden=true;abrirComentario();};
+$("#btnAdm").onclick=()=>{$("#moreMenu").hidden=true;abrirAdmin();};
+window.addEventListener("fb-ready",()=>{if(window.__fb.isAdmin)$("#btnAdm").hidden=false;});
 $("#btnAddCard2").onclick=()=>$("#btnAddCard").click();
-$("#btnProxPay").onclick=()=>{const id=$("#btnProxPay").dataset.id;if(id)openPayModal(id);};
+$("#btnProxPay").onclick=()=>{const id=$("#btnProxPay").dataset.id;if(id)openPayModal(id);else pickFile(null,"estado");};
 $("#btnSize").onclick=()=>setSize(document.documentElement.dataset.size!=="grande");
 function setSize(on){document.documentElement.dataset.size=on?"grande":"";$("#btnSize").setAttribute("aria-pressed",String(on));try{localStorage.setItem("mt-letra",on?"grande":"normal");}catch(e){}if(on)toast("Letra grande activada");}
 try{if(localStorage.getItem("mt-letra")==="grande")setSize(true);}catch(e){}
@@ -1201,7 +1283,11 @@ function openConfig(){openModal("Ajustes de alertas",[
   {t:"Descargar respaldo",fn:()=>$("#btnBackup").click()},
   {t:"Importar respaldo",fn:()=>importBackup()},
   {t:"Activar avisos",fn:()=>askNotif()},
-  {t:"Cerrar sesión",cls:"danger",fn:()=>window.__fb&&window.__fb.logout()}]);}
+  {t:"Enviar sugerencia o problema",fn:()=>{closeModal();abrirComentario();}},
+  ...(window.__fb&&window.__fb.isAdmin?[{t:"👑 Administrar usuarios",fn:()=>{closeModal();abrirAdmin();}}]:[]),
+  {t:"Aviso de privacidad",fn:()=>{closeModal();mostrarPrivacidad();}},
+  {t:"Cerrar sesión",fn:()=>window.__fb&&window.__fb.logout()},
+  {t:"Borrar mi cuenta",cls:"danger",fn:()=>{closeModal();borrarCuenta();}}]);}
 function importBackup(){const inp=document.createElement("input");inp.type="file";inp.accept="application/json,.json";
   inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!d.tarjetas)throw 0;
     const data={tarjetas:d.tarjetas||{},msi:d.msi||{},compras:d.compras||{},config:d.config||{},importado:new Date().toISOString()};
@@ -1225,6 +1311,77 @@ async function tomarCompartido(){try{
   askTipo(new File([b],nombre,{type:b.type||r.headers.get("content-type")||""}));
 }catch(e){}}
 window.addEventListener("fb-ready",()=>setTimeout(tomarCompartido,600));
+/* ===== comentarios ===== */
+function abrirComentario(){
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">Enviar sugerencia o problema</h2><button type="button" id="cmClose">Cerrar</button></div>
+    <p class="muted" style="margin:0">Cuéntanos qué mejorarías o qué no funcionó. Lo lee directamente quien hace la app.</p>
+    <label for="cmTxt">Tu comentario<textarea id="cmTxt" rows="6" style="font:inherit" placeholder="Ej. no pude subir la foto de mi ticket…"></textarea></label>
+    <div class="modal-foot"><span></span><button type="button" class="primary" id="cmSend">Enviar</button></div>`;
+  $("#ovF").classList.add("open");$("#cmClose").onclick=closeFicha;
+  $("#cmSend").onclick=async()=>{const t=$("#cmTxt").value.trim();if(t.length<3){toast("Escribe tu comentario.");return;}
+    $("#cmSend").disabled=true;try{await window.__fb.comentario(t);closeFicha();toast("¡Gracias! Recibimos tu comentario.");}catch(e){$("#cmSend").disabled=false;toast("No se pudo enviar. Revisa tu internet.");}};
+}
+/* ===== aviso de privacidad ===== */
+function mostrarPrivacidad(){
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">Aviso de privacidad</h2><button type="button" id="pvClose">Cerrar</button></div>
+  <div class="ai-text" style="font-size:15px">
+  <p><b>Responsable:</b> Miguel Escobar Santos, Oaxaca, México, quien administra la app Mis Tarjetas (versión de prueba gratuita).</p>
+  <p><b>Qué datos usamos:</b> tu nombre y correo para que entres, y los datos de tus tarjetas que tú subes: fechas de corte y de pago, montos, compras, pagos y los archivos de tus estados de cuenta, comprobantes y tickets.</p>
+  <p><b>Para qué:</b> solo para mostrarte tus pagos, recordatorios, compras a meses y análisis. No vendemos ni compartimos tus datos con nadie para publicidad.</p>
+  <p><b>Dónde se guardan:</b> en Google Firebase (Estados Unidos), en un espacio al que solo entra tu cuenta. Para leer tus documentos, el archivo se envía a Claude (Anthropic), que lo procesa para devolver los datos y no lo usa para entrenar sus modelos.</p>
+  <p><b>No guardes datos completos:</b> la app solo necesita los últimos 4 dígitos de tus tarjetas. Nunca escribas tu NIP, CVV ni contraseñas de tu banco.</p>
+  <p><b>Tus derechos (ARCO):</b> puedes ver, corregir o borrar tus datos cuando quieras desde la app. En <b>Ajustes → Borrar mi cuenta</b> se eliminan tus datos y archivos. También puedes pedirlo con “Enviar sugerencia o problema”.</p>
+  <p><b>Importante:</b> la app da orientación; no es asesoría financiera profesional. Revisa siempre los montos con tu banco.</p>
+  <p class="muted" style="font-size:13px">Última actualización: noviembre 2026.</p></div>`;
+  $("#ovF").classList.add("open");$("#pvClose").onclick=closeFicha;
+}
+window.mostrarPrivacidad=mostrarPrivacidad;
+/* ===== borrar cuenta ===== */
+function borrarCuenta(){
+  $("#fBody").innerHTML=`<h2 id="fTitle">Borrar mi cuenta</h2><p>Se borrarán <b>todas tus tarjetas, pagos, compras y documentos</b>. No se puede deshacer. Si quieres conservar una copia, primero usa “Descargar respaldo”.</p>
+    <label for="bcTxt">Para confirmar escribe <b>BORRAR</b><input id="bcTxt" autocomplete="off"></label>
+    <div class="modal-foot"><button type="button" id="bcNo">Cancelar</button><button type="button" class="primary" id="bcSi" style="background:var(--red);border-color:var(--red)">Borrar todo</button></div>`;
+  $("#ovF").classList.add("open");$("#bcNo").onclick=closeFicha;
+  $("#bcSi").onclick=async()=>{if($("#bcTxt").value.trim().toUpperCase()!=="BORRAR"){toast("Escribe BORRAR para confirmar.");return;}$("#bcSi").disabled=true;toast("Borrando…");try{await window.__fb.borrarCuenta();}catch(e){$("#bcSi").disabled=false;toast("No se pudo borrar. Intenta de nuevo.");}};
+}
+/* ===== panel de administración ===== */
+async function abrirAdmin(){
+  const A=window.__fb.admin;$("#fBody").innerHTML='<h2 id="fTitle">Administrar usuarios</h2><p class="muted">Cargando…</p>';$("#ovF").classList.add("open");
+  let per=[],sol=[],com=[],uso=[],inv=[];
+  try{[per,sol,com,uso,inv]=await Promise.all([A.permitidos(),A.solicitudes(),A.comentarios().catch(()=>[]),A.uso().catch(()=>[]),A.invitaciones().catch(()=>[])]);}catch(e){$("#fBody").innerHTML='<h2 id="fTitle">Administrar usuarios</h2><p>No se pudo cargar. Revisa que hayas publicado las reglas nuevas de Firestore.</p><button type="button" id="adX">Cerrar</button>';$("#adX").onclick=closeFicha;return;}
+  const mes=new Date().toISOString().slice(0,7);const usoMes=e=>{const x=uso.find(u=>u.email===e&&u.mes===mes);return x?x.lecturas:0;};
+  const tot=(uso.find(u=>u.id==="total_"+mes)||{}).lecturas||0;
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">Administrar usuarios</h2><button type="button" id="adX">Cerrar</button></div>
+  <p class="muted" style="margin:0">Lecturas con Claude este mes: <b>${tot}</b> en total.</p>
+  ${sol.length?`<h3 style="font-size:17px">🔔 Piden acceso (${sol.length})</h3>${sol.map(x=>`<div class="avrow"><div><b>${esc(x.nombre||x.email)}</b><span>${esc(x.email)} · ${fd(String(x.fecha||"").slice(0,10))}</span></div><div class="actions"><button type="button" class="small primary" data-ok="${esc(x.email)}" data-nom="${esc(x.nombre||"")}">Aprobar</button><button type="button" class="small" data-no="${esc(x.email)}">Rechazar</button></div></div>`).join("")}`:""}
+  <div class="fijos"><b style="font-size:18px">📲 Invitar por WhatsApp</b><small class="muted">Se genera un link. La persona lo abre, entra con Google o su correo y queda autorizada sola. No necesitas su correo.</small>
+    <input id="ivNom" placeholder="Nombre (opcional), ej. Tía Rosa">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><label class="check" style="font-weight:600">Para<select id="ivN" style="width:auto;min-height:44px"><option value="1">1 persona</option><option value="3">3 personas</option><option value="5">5 personas</option><option value="10">10 personas</option></select></label>
+    <button type="button" class="primary" id="ivGo" style="flex:1;justify-content:center">Crear link de invitación</button></div>
+    <div id="ivOut"></div></div>
+  ${inv.filter(x=>x.restantes>0).length?`<h3 style="font-size:17px">Links activos</h3>${inv.filter(x=>x.restantes>0).map(x=>`<div class="avrow"><div><b>${esc(x.nombre||"Invitación")} · ${esc(x.codigo)}</b><span>Quedan ${x.restantes} de ${x.personas} · vence ${x.vence&&x.vence.toDate?fd(iso(x.vence.toDate()),true):""}</span></div><div class="actions"><button type="button" class="small" data-ivwa="${esc(x.codigo)}" data-ivnom="${esc(x.nombre||"")}">WhatsApp</button><button type="button" class="small danger" data-ivdel="${esc(x.codigo)}">Cancelar</button></div></div>`).join("")}`:""}
+  <h3 style="font-size:17px">Personas autorizadas (${per.length})</h3>
+  <details><summary class="muted" style="cursor:pointer;font-weight:700">Autorizar por correo (si lo tienes)</summary>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input id="adEmail" type="email" placeholder="correo@ejemplo.com" style="flex:2;min-width:180px"><input id="adNom" placeholder="Nombre" style="flex:1;min-width:120px"><button type="button" class="primary" id="adAdd">Autorizar</button></div></details>
+  ${per.length?per.map(x=>`<div class="avrow"><div><b>${esc(x.nombre||x.email)}</b><span>${esc(x.email)} · ${usoMes(x.email)} lecturas este mes</span></div><button type="button" class="small danger" data-del="${esc(x.email)}">Quitar</button></div>`).join(""):'<p class="muted">Todavía no autorizas a nadie.</p>'}
+  <h3 style="font-size:17px">💬 Comentarios (${com.length})</h3>
+  ${com.length?com.map(x=>`<div class="avrow" style="align-items:flex-start"><div><b>${esc(x.nombre||x.email)}</b><span>${esc(x.email)} · ${fd(String(x.fecha||"").slice(0,10))}</span><p style="margin:6px 0 0;white-space:pre-wrap">${esc(x.texto)}</p></div><button type="button" class="small" data-cdel="${esc(x.id)}">Listo</button></div>`).join(""):'<p class="muted">Sin comentarios por ahora.</p>'}`;
+  $("#adX").onclick=closeFicha;
+  const linkDe=c=>location.origin+location.pathname+"?invita="+c;
+  const waInv=(c,nom)=>{const t=(nom?"Hola "+nom.split(" ")[0]+", ":"Hola, ")+"te invito a usar Mis Tarjetas, una app para que no se te pase ningún pago de tus tarjetas de crédito. Ábrela desde este link y entra con tu cuenta de Google o tu correo:\n"+linkDe(c);window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");};
+  $("#ivGo").onclick=async()=>{$("#ivGo").disabled=true;try{const nom=$("#ivNom").value.trim();const c=await A.invitar(nom,$("#ivN").value,14);
+    $("#ivOut").innerHTML=`<div class="alert ok" style="flex-direction:column;align-items:stretch;gap:8px"><span>Link listo (vale 14 días):<br><b style="word-break:break-all">${esc(linkDe(c))}</b></span><div class="actions"><button type="button" class="btnwa" id="ivWa">Enviar por WhatsApp</button><button type="button" id="ivCp">Copiar link</button></div></div>`;
+    $("#ivWa").onclick=()=>waInv(c,nom);$("#ivCp").onclick=async()=>{try{await navigator.clipboard.writeText(linkDe(c));toast("Link copiado");}catch(e){toast("No se pudo copiar");}};}
+    catch(e){toast("No se pudo crear. Revisa que publicaste las reglas nuevas.");}finally{$("#ivGo").disabled=false;}};
+  $("#fBody").querySelectorAll("[data-ivwa]").forEach(b=>b.onclick=()=>waInv(b.dataset.ivwa,b.dataset.ivnom));
+  $("#fBody").querySelectorAll("[data-ivdel]").forEach(b=>b.onclick=async()=>{await A.borrarInvitacion(b.dataset.ivdel);toast("Link cancelado");abrirAdmin();});
+  $("#adAdd").onclick=async()=>{const e=$("#adEmail").value.trim().toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){toast("Escribe un correo válido.");return;}await A.permitir(e,$("#adNom").value.trim());toast("Autorizado: "+e);abrirAdmin();};
+  $("#fBody").querySelectorAll("[data-ok]").forEach(b=>b.onclick=async()=>{await A.permitir(b.dataset.ok,b.dataset.nom);await A.borrarSolicitud(b.dataset.ok);toast("Aprobado");abrirAdmin();});
+  $("#fBody").querySelectorAll("[data-no]").forEach(b=>b.onclick=async()=>{await A.borrarSolicitud(b.dataset.no);toast("Solicitud rechazada");abrirAdmin();});
+  $("#fBody").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="¿Seguro?";return;}await A.quitar(b.dataset.del);toast("Acceso quitado");abrirAdmin();});
+  $("#fBody").querySelectorAll("[data-cdel]").forEach(b=>b.onclick=async()=>{await A.borrarComentario(b.dataset.cdel);abrirAdmin();});
+}
+window.addEventListener("fb-ready",()=>{if(window.__fb.isAdmin){window.__fb.admin.solicitudes().then(l=>{if(l.length)toast("🔔 "+l.length+(l.length===1?" persona pide":" personas piden")+" acceso. Ajustes → Administrar usuarios.");}).catch(()=>{});}});
 $("#btnConfig").onclick=openConfig;
 
 document.addEventListener("click",e=>{
@@ -1567,8 +1724,10 @@ async function blobToInput(blob,mime){
 }
 let pdfReady=null;
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
-function ensurePdf(){if(!pdfReady){const base="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
-  pdfReady=loadScript(base+"pdf.min.js").then(()=>loadScript(base+"pdf.worker.min.js")).then(()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return window.pdfjsLib;});}
+function ensurePdf(){if(!pdfReady){
+  const cargar=base=>loadScript(base+"pdf.min.js").then(()=>loadScript(base+"pdf.worker.min.js")).then(()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc=base+"pdf.worker.min.js";return window.pdfjsLib;});
+  // primero la copia propia (la versión de Claude no puede usar internet externo); si no está, la de cdnjs
+  pdfReady=cargar("pdfjs/").catch(()=>cargar("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/")).catch(e=>{pdfReady=null;throw e;});}
   return pdfReady;}
 async function runImport(blob,mime,asset,hintId){
   const fail=msg=>{$("#ovF").classList.remove("busy");$("#fBody").innerHTML=`<h2 id="fTitle">No se pudo leer</h2><p>${esc(msg)}</p><div class="actions"><button type="button" id="fManual">Capturar a mano</button><button type="button" class="primary" id="fClose2">Cerrar</button></div>`;$("#fClose2").onclick=closeFicha;$("#fManual").onclick=()=>manualEstado(hintId);};
