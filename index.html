@@ -1833,6 +1833,15 @@ function guessCard(v,hintId){
   if(term){const id=cardByTerm(term);if(id)return id;}
   return "__new";
 }
+/* ¿El estado que se sube es más nuevo, igual o anterior al que ya tiene la tarjeta? y ¿qué pagos ya se hicieron después de su corte? */
+function modoImport(t,v){
+  if(!t||!v||!v.fechaCorte)return {tipo:"nuevo",pagos:0};
+  const fc=v.fechaCorte,act=t.fechaCorte||"";
+  const ult=(t.historial||[]).reduce((m,h)=>h.fechaCorte>m?h.fechaCorte:m,"");
+  const tipo=(act&&fc<act&&!t.estimado)||(ult&&fc<ult)?"viejo":(fc===act?"igual":"nuevo");
+  const pagos=(t.pagos||[]).filter(x=>x.fecha&&x.fecha>fc).reduce((s,x)=>s+Number(x.monto||0),0);
+  return {tipo,pagos:Math.round(pagos*100)/100};
+}
 function reviewImport(v,asset,hintId){
   const sel=guessCard(v,hintId);const nm=(v.banco||"")+" "+(v.producto||"")+(v.terminacion?" ·"+v.terminacion:"");
   const m=v.comprasMeses||[];
@@ -1841,11 +1850,17 @@ function reviewImport(v,asset,hintId){
     <label for="impCard">Guardar en<select id="impCard">${tarjetas.map(t=>`<option value="${esc(t.id)}" ${t.id===sel?"selected":""}>${esc(t.nombre)}</option>`).join("")}<option value="__new" ${sel==="__new"?"selected":""}>Nueva tarjeta: ${esc(nm.trim())}</option></select></label>
     <div class="kv"><div><span>Fecha límite</span><b>${fd(v.fechaLimite,true)}</b></div><div><span>Pago sin intereses</span><b>${money(v.pagoSinIntereses)}</b></div><div><span>Pago mínimo</span><b>${v.pagoMinimo==null?"—":money(v.pagoMinimo)}</b></div>
       <div><span>Saldo total</span><b>${money(v.saldoTotal)}</b></div><div><span>Límite</span><b>${v.limite==null?"—":money(v.limite)}</b></div><div><span>Tasa anual</span><b>${v.tipo==="cargo"?"Cargo":pct(v.tasaAnual)}</b></div></div>
-    <p class="muted" style="margin:0">${m.length} compras a meses${m.length?" · "+money(m.reduce((s,x)=>s+Number(x.mensualidad||0),0))+" al mes":""}. Al guardar, reemplazan las que tenía esta tarjeta.</p>
+    <div id="impModo"></div>
+    <p class="muted" style="margin:0">${m.length} compras a meses${m.length?" · "+money(m.reduce((s,x)=>s+Number(x.mensualidad||0),0))+" al mes":""}.</p>
     ${(v.cargosFijos||[]).length?`<div class="fijos"><b>Cargos que se repiten</b><small class="muted">Marca los que se cobran cada mes: se suman a “Lo que viene”.</small>${v.cargosFijos.map((x,i)=>`<label class="check"><input type="checkbox" data-fijo="${i}" ${x.frecuencia!=="anual"?"checked":""}> ${esc(x.concepto||"Cargo")} · ${money(x.monto)}${x.frecuencia==="anual"?" <span class=\"muted\">(parece anual)</span>":""}</label>`).join("")}</div>`:""}
     ${(v.alertas||[]).length?`<div class="alist">${v.alertas.map(z=>`<div><span class="chip ${NIV[z.nivel]?NIV[z.nivel].c:"gray"}">${NIV[z.nivel]?NIV[z.nivel].t:"Info"}</span><span>${esc(z.texto)}</span></div>`).join("")}</div>`:""}
     <div class="modal-foot"><button type="button" id="impCancel">Cancelar</button><button type="button" class="primary" id="impSave">Guardar</button></div>`;
   $("#impCancel").onclick=closeFicha;
+  const modoTxt=()=>{const t=tarjetas.find(x=>x.id===$("#impCard").value);const md=modoImport(t,v);
+    $("#impModo").innerHTML=md.tipo==="viejo"?`<div class="alert amber"><span><b>Este estado de cuenta es anterior</b> al que ya tienes (corte del ${fd(t.fechaCorte,true)}). Se guardará en el historial y <b>no cambiará</b> tus datos ni tus pagos actuales.</span></div>`
+      :md.pagos>0?`<div class="alert ok"><span>Ya registraste <b>${money(md.pagos)}</b> en pagos después de este corte. Se descuentan: te quedaría por pagar <b>${money(Math.max(0,Number(v.pagoSinIntereses||0)-md.pagos))}</b>.</span></div>`
+      :md.tipo==="igual"?`<div class="alert amber"><span>Este corte ya lo tenías: se actualizarán los datos con este documento.</span></div>`:"";};
+  $("#impCard").addEventListener("change",modoTxt);modoTxt();
   $("#impSave").onclick=async()=>{
     $("#impSave").disabled=true;
     try{
@@ -1854,13 +1869,19 @@ function reviewImport(v,asset,hintId){
       const c=Object.assign({},old.condiciones||{});
       ["tasaAnual","cat","anualidad12m","comisiones12m","intereses12m"].forEach(k=>{if(v[k]!=null&&v[k]!=="")c[k]=Number(v[k]);});
       if(v.tipo)c.tipo=v.tipo;c.fuente="Estado de cuenta corte "+fd(v.fechaCorte);
-      const pago=Number(v.pagoSinIntereses||0);
+      const md=modoImport(isNew?null:old,v);
+      const hist=(old.historial||[]).filter(h=>h.fechaCorte!==v.fechaCorte).concat([{fechaCorte:v.fechaCorte,fechaLimite:v.fechaLimite,pagoSinIntereses:Number(v.pagoSinIntereses||0),saldoTotal:v.saldoTotal==null?null:Number(v.saldoTotal),documento:asset?asset.nombre:"",leido:iso(today())}]).sort((a,b)=>String(b.fechaCorte).localeCompare(String(a.fechaCorte))).slice(0,24);
+      if(md.tipo==="viejo"){
+        const nv=Object.assign({},old,{historial:hist,documentos:(old.documentos||[]).concat(asset?[asset]:[])});
+        const c0=Object.assign({},old.condiciones||{});["tasaAnual","cat","anualidad12m","comisiones12m","intereses12m"].forEach(k=>{if(c0[k]==null&&v[k]!=null&&v[k]!=="")c0[k]=Number(v[k]);});nv.condiciones=c0;
+        delete nv.id;await saveDoc("tarjetas",id,nv);closeFicha();toast("Guardado en el historial de "+old.nombre+". Tus datos actuales no cambiaron.");return;}
+      const pago=Number(v.pagoSinIntereses||0);const yaPag=md.pagos;
       const cf=(v.cargosFijos||[]);let extra={};
       if(cf.length){const sel=[...document.querySelectorAll("[data-fijo]")].filter(x=>x.checked).map(x=>cf[Number(x.dataset.fijo)]);
         extra={fijoMensual:Math.round(sel.reduce((a,x)=>a+Number(x.monto||0),0)*100)/100,cargosFijos:cf.map((x,i)=>({concepto:String(x.concepto||"Cargo"),monto:Number(x.monto||0),frecuencia:x.frecuencia==="anual"?"anual":"mensual",cadaMes:!!(document.querySelector(`[data-fijo="${i}"]`)||{}).checked}))};}
       const n=Object.assign({},old,extra,{banco:old.banco||v.banco,fechaCorte:v.fechaCorte||old.fechaCorte,fechaLimite:v.fechaLimite||old.fechaLimite,pagoSinIntereses:pago,pagoMinimo:v.pagoMinimo==null?null:Number(v.pagoMinimo),
-        saldoTotal:v.saldoTotal==null?old.saldoTotal:Number(v.saldoTotal),limite:v.limite==null?(old.limite??null):Number(v.limite),disponible:v.disponible==null?(old.disponible??null):Number(v.disponible),
-        estatus:pago>0?"Pendiente":"Sin saldo",estimado:false,condiciones:c,pagadoCiclo:0,
+        saldoTotal:v.saldoTotal==null?old.saldoTotal:Math.max(0,Math.round((Number(v.saldoTotal)-yaPag)*100)/100),limite:v.limite==null?(old.limite??null):Number(v.limite),disponible:v.disponible==null?(old.disponible??null):Math.round((Number(v.disponible)+(v.limite!=null?Math.min(yaPag,Math.max(0,Number(v.limite)-Number(v.disponible))):yaPag))*100)/100,
+        estatus:pago<=0?"Sin saldo":(yaPag+0.5>=pago?"Pagado":"Pendiente"),estimado:false,condiciones:c,pagadoCiclo:Math.round(yaPag*100)/100,historial:hist,
         ultimoEstado:{resumen:v.resumen||"",alertas:v.alertas||[],fechaCorte:v.fechaCorte,documento:asset?asset.nombre:"",leido:iso(today())},
         documentos:(old.documentos||[]).concat(asset?[asset]:[])});
       delete n.id;delete n.contratoAnalisis;
@@ -1868,7 +1889,7 @@ function reviewImport(v,asset,hintId){
       const viejas=msi.filter(x=>x.tarjeta===id);
       for(const x of viejas){await delDoc("msi",x.id);}
       let k=0;for(const x of (v.comprasMeses||[])){k++;await saveDoc("msi",id+"-"+(v.fechaCorte||iso(today())).replace(/-/g,"")+"-"+k,{tarjeta:id,compra:String(x.compra||"Compra a meses"),mensualidad:Number(x.mensualidad||0),pagoActual:Number(x.pagoActual||0),totalPagos:Number(x.totalPagos||0),saldoPendiente:Number(x.saldoPendiente||0),montoOriginal:x.montoOriginal==null?null:Number(x.montoOriginal),ultimoCorte:v.fechaCorte||iso(today())});}
-      closeFicha();toast((n.nombre||"Tarjeta")+" actualizada"+(extra.fijoMensual?" (cargos fijos "+money(extra.fijoMensual)+"/mes)":"")+": "+(pago>0?"paga "+money(pago)+" antes del "+fd(n.fechaLimite):"sin saldo por pagar"));
+      closeFicha();if(yaPag>0)toast("Se descontaron "+money(yaPag)+" que ya habías pagado después del corte.");else toast((n.nombre||"Tarjeta")+" actualizada"+(extra.fijoMensual?" (cargos fijos "+money(extra.fijoMensual)+"/mes)":"")+": "+(pago>0?"paga "+money(pago)+" antes del "+fd(n.fechaLimite):"sin saldo por pagar"));
     }catch(e){$("#impSave").disabled=false;toast("No se pudo guardar. Intenta de nuevo.");}
   };
 }
