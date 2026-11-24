@@ -960,10 +960,12 @@ function renderProyeccion(){const box=$("#proy");if(!box)return;const items=proy
 function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>x.id===selCard);if(!t){box.hidden=true;return;}box.hidden=false;
   const c=t.condiciones||{},u=usoDe(t),d=daysTo(t.fechaLimite),al=condAlerts(t).sort((a,b)=>"alta media baja".indexOf(a.n)-"alta media baja".indexOf(b.n)).slice(0,2);
   const pago=isPend(t)?`<div class="cpay ${d!==null&&d<0?"late":d!==null&&d<=Number(config.diasAviso||3)?"soon":""}"><span>Tienes que pagar</span><b class="num">${money(restanteDe(t))}</b><span>${d===null?"":d<0?"Venció el "+fd(t.fechaLimite,true):d===0?"Vence HOY":"Antes del "+fd(t.fechaLimite,true)+" · faltan "+d+" días"}${t.estimado?" · estimado":""}</span></div>`
-    :`<div class="cpay ok"><span>${t.estatus==="Pagado"?"Ya está pagada este mes":"No debes nada este mes"}</span><b>${t.estatus==="Pagado"?"✓ Pagada":"$0"}</b><span>${t.fechaLimite?"Siguiente fecha límite: "+fd(t.fechaLimite,true):""}</span></div>`;
+    :`<div class="cpay ok"><span>${t.estatus==="Pagado"?"Ya está pagada este mes":"No debes nada este mes"}</span><b>${t.estatus==="Pagado"?"✓ Pagada":"$0"}</b></div>`;
+  const fechasHtml=(t.fechaCorte||t.fechaLimite)?`<div class="cstats"><div><span>Fecha de corte</span><b>${t.fechaCorte?fd(t.fechaCorte,true):"—"}</b>${t.fechaCorte?`<small>Próximo corte: ${fd(addMonths(t.fechaCorte,1),true)}</small>`:""}</div><div><span>Fecha límite de pago</span><b>${t.fechaLimite?fd(t.fechaLimite,true):"—"}</b>${isPend(t)?"":(t.fechaLimite?`<small>Siguiente: ${fd(addMonths(t.fechaLimite,1),true)}</small>`:"")}</div></div>`:"";
   const usoPct=u===null?null:Math.round(u*100);
   box.innerHTML=`<div class="chead"><span class="cbig" style="background:linear-gradient(135deg,${bankColor(t)},${shade(bankColor(t),.62)})"></span><div><div class="muted" style="font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.03em">${esc(t.banco||"")}</div><h2>${esc(t.nombre)}</h2></div></div>
     ${pago}
+    ${fechasHtml}
     <div class="cstats">
       <div><span>Saldo de la tarjeta (incluye meses)</span><b class="num">${money(t.saldoTotal||0)}</b></div>
       <div><span>${c.tipo==="cargo"?"Tipo":"Tasa anual"}</span><b>${c.tipo==="cargo"?"Cargo":pct(c.tasaAnual)}</b></div>
