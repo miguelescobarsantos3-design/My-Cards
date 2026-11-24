@@ -1,5 +1,5 @@
 // Mis Tarjetas - service worker. Cambia la versión cada vez que subas cambios.
-const VERSION="mis-tarjetas-v20";
+const VERSION="mis-tarjetas-v22";
 const ARCHIVOS=["./","index.html","manifest.json","icon-192.png","icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(VERSION).then(c=>c.addAll(ARCHIVOS)).then(()=>self.skipWaiting()));});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==VERSION&&k!=="compartido").map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});

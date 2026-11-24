@@ -507,8 +507,9 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
       <div class="moremenu" id="moreMenu" hidden>
         <button id="btnCal" type="button">Recordatorios al calendario</button>
         <button id="btnAvisos2" type="button">Avisos de vencimiento</button>
-        <button id="btnMail" type="button">Enviar resumen por correo</button>
-        <button id="btnBackup" type="button">Descargar respaldo</button>
+        <button id="btnMail" type="button">Enviar resumen (WhatsApp o correo)</button>
+        <button id="btnBackup" type="button" hidden>Descargar respaldo</button>
+        <button id="btnCsv" type="button">Descargar mis datos (Excel)</button>
         <button id="btnAddCard2" type="button">Agregar una tarjeta</button>
         <button id="btnSug" type="button">💬 Enviar sugerencia o problema</button>
         <button id="btnAdm" type="button" hidden>👑 Administrar usuarios</button>
@@ -1128,6 +1129,7 @@ $("#btnCal").addEventListener("click",async()=>{
 });
 
 /* ---------- avisos de vencimiento ---------- */
+function abrirLink(url){const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();setTimeout(()=>a.remove(),500);}
 function avisoTexto(){
   const pend=tarjetas.filter(t=>isPend(t)&&t.fechaLimite).sort((a,b)=>a.fechaLimite.localeCompare(b.fechaLimite));
   if(!pend.length)return "";
@@ -1160,7 +1162,7 @@ function openAvisos(){
   $("#avClose").onclick=closeFicha;
   $("#avIcs").onclick=()=>$("#btnCal").click();
   $("#avMes").onclick=saveIcsMensual;
-  $("#avWa").onclick=()=>{const t=avisoTexto();if(!t){toast("No tienes pagos pendientes.");return;}window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");};
+  $("#avWa").onclick=()=>{const t=avisoTexto();if(!t){toast("No tienes pagos pendientes.");return;}abrirLink("https://wa.me/?text="+encodeURIComponent(t));};
   $("#avMail").onclick=()=>$("#btnMail").click();
   if(hasNotif)$("#avNotif").onclick=()=>askNotif();
 }
@@ -1195,11 +1197,35 @@ async function maybeAutoMail(){
   const urg=tarjetas.filter(t=>isPend(t)&&daysTo(t.fechaLimite)!==null&&daysTo(t.fechaLimite)<=Number(config.diasAviso||3));
   if(urg.length) await sendMail(true);
 }
-$("#btnMail").addEventListener("click",()=>{
-  const pend=tarjetas.filter(isPend).sort((a,b)=>(a.fechaLimite||"").localeCompare(b.fechaLimite||""));
-  const body="Pagos pendientes de tarjetas ("+fd(iso(today()))+"):\n\n"+pend.map(t=>"- "+t.nombre+": "+money(restanteDe(t))+" antes del "+fd(t.fechaLimite,true)).join("\n")+"\n\nTotal: "+money(pend.reduce((s,t)=>s+restanteDe(t),0));
-  location.href="mailto:"+encodeURIComponent(config.correo||"")+"?subject="+encodeURIComponent("Pagos de tarjetas pendientes")+"&body="+encodeURIComponent(body);
-});
+$("#btnMail").addEventListener("click",()=>{$("#moreMenu").hidden=true;abrirResumen();});
+function textoResumen(){const pend=tarjetas.filter(isPend).sort((a,b)=>(a.fechaLimite||"").localeCompare(b.fechaLimite||""));
+  if(!pend.length)return "Mis Tarjetas ("+fd(iso(today()))+"): no tengo pagos pendientes. ✅";
+  return "Mis pagos de tarjeta pendientes ("+fd(iso(today()))+"):\n\n"+pend.map(t=>{const d=daysTo(t.fechaLimite);return "• "+t.nombre+": "+money(restanteDe(t))+" — "+(d===null?"sin fecha":d<0?"VENCIDA":d===0?"vence HOY":d===1?"vence MAÑANA":"vence el "+fd(t.fechaLimite,true)+" (en "+d+" días)");}).join("\n")+"\n\nTotal: "+money(pend.reduce((s,t)=>s+restanteDe(t),0));}
+function abrirResumen(){const txt=textoResumen();const asunto="Mis pagos de tarjeta pendientes";const to=config.correo||"";
+  $("#fBody").innerHTML=`<div class="section-head" style="margin:0"><h2 id="fTitle">Enviar resumen</h2><button type="button" id="rsX">Cerrar</button></div>
+    <pre style="white-space:pre-wrap;font:inherit;background:var(--gray-soft);border-radius:14px;padding:12px;margin:0;max-height:240px;overflow:auto">${esc(txt)}</pre>
+    <div class="cacts">${navigator.share?'<button type="button" class="primary" id="rsSh">Compartir (WhatsApp, correo, etc.)</button>':""}
+      <button type="button" class="btnwa" id="rsWa">Enviar por WhatsApp</button>
+      <button type="button" id="rsGm">Enviar por Gmail</button>
+      <button type="button" id="rsMl">Otra app de correo</button>
+      <button type="button" id="rsCp">Copiar texto</button></div>`;
+  $("#ovF").classList.add("open");$("#rsX").onclick=closeFicha;
+  if($("#rsSh"))$("#rsSh").onclick=async()=>{try{await navigator.share({title:asunto,text:txt});}catch(e){}};
+  $("#rsWa").onclick=()=>abrirLink("https://wa.me/?text="+encodeURIComponent(txt));
+  $("#rsGm").onclick=()=>abrirLink("https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(to)+"&su="+encodeURIComponent(asunto)+"&body="+encodeURIComponent(txt));
+  $("#rsMl").onclick=()=>{location.href="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(asunto)+"&body="+encodeURIComponent(txt);};
+  $("#rsCp").onclick=async()=>{try{await navigator.clipboard.writeText(txt);toast("Copiado. Pégalo donde quieras.");}catch(e){toast("No se pudo copiar.");}};}
+function descargarExcel(){const q=v=>{v=v==null?"":String(v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};const n=v=>v==null||v===""?"":Number(v).toFixed(2);
+  const filas=[["Tarjeta","Banco","Estatus","Fecha de corte","Fecha límite","Pago sin intereses","Ya pagado","Falta por pagar","Saldo total","Límite","Disponible","Tasa anual %","Cargos fijos al mes"]];
+  tarjetas.forEach(t=>filas.push([t.nombre,t.banco,t.estatus,t.fechaCorte,t.fechaLimite,n(t.pagoSinIntereses),n(pagadoDe(t)),n(isPend(t)?restanteDe(t):0),n(t.saldoTotal),n(t.limite),n(t.disponible),(t.condiciones||{}).tasaAnual??"",n(t.fijoMensual)]));
+  filas.push([]);filas.push(["PAGOS REGISTRADOS"]);filas.push(["Tarjeta","Fecha","Monto"]);
+  tarjetas.forEach(t=>(t.pagos||[]).forEach(p=>filas.push([t.nombre,p.fecha,n(p.monto)])));
+  filas.push([]);filas.push(["COMPRAS A MESES"]);filas.push(["Tarjeta","Compra","Mensualidad","Pagos hechos","Total de pagos","Saldo pendiente"]);
+  msi.forEach(m=>filas.push([cardName(m.tarjeta),m.compra,n(m.mensualidad),m.pagoActual,m.totalPagos,n(m.saldoPendiente)]));
+  filas.push([]);filas.push(["COMPRAS"]);filas.push(["Fecha","Tarjeta","Comercio","Producto","Categoría","Para qué","Monto","Meses"]);
+  compras.forEach(c=>filas.push([c.fecha,cardName(c.tarjeta),c.comercio,c.producto,c.categoria,c.motivo,n(c.monto),c.meses]));
+  const csv="\ufeff"+filas.map(r=>r.map(q).join(",")).join("\r\n");
+  const b=new Blob([csv],{type:"text/csv;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="mis-tarjetas-"+iso(today())+".csv";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);toast("Descargado: ábrelo con Excel o Google Sheets.");}
 
 /* ---------- formularios ---------- */
 let saveFn=null;
@@ -1250,6 +1276,7 @@ function newCycle(id){
   openModal("Nuevo corte · "+t.nombre,cardFields(n).filter(f=>["nombre","limite","notas","revisarTxt"].indexOf(f.k)<0),o=>saveDoc("tarjetas",id,cardFromForm(n,o)));
 }
 $("#btnUpCompra2").onclick=()=>$("#btnUpCompra").click();
+$("#btnCsv").onclick=()=>{$("#moreMenu").hidden=true;descargarExcel();};
 $("#btnSug").onclick=()=>{$("#moreMenu").hidden=true;abrirComentario();};
 $("#btnAdm").onclick=()=>{$("#moreMenu").hidden=true;abrirAdmin();};
 window.addEventListener("fb-ready",()=>{if(window.__fb.isAdmin)$("#btnAdm").hidden=false;});
@@ -1281,10 +1308,12 @@ function editMsi(id){const m=msi.find(x=>x.id===id);if(!m)return;
 $("#btnAddMsi").onclick=()=>{const base={pagoActual:0};openModal("Agregar compra a meses",msiFields(base),o=>saveDoc("msi",newId("m"),msiClean(base,o)));};
 function openConfig(){openModal("Ajustes de alertas",[
   {k:"correo",label:"Correo para recordatorios",type:"email",value:config.correo,full:true},
-  {k:"diasAviso",label:"Avisar con cuántos días de anticipación",type:"number",value:config.diasAviso}
-],async o=>{config=Object.assign({},config,o);await db.doc("config/alertas").set(config);render();},[
-  {t:"Descargar respaldo",fn:()=>$("#btnBackup").click()},
-  {t:"Importar respaldo",fn:()=>importBackup()},
+  {k:"diasAviso",label:"Avisar con cuántos días de anticipación",type:"number",value:config.diasAviso},
+  {k:"__clavespdf",label:"Contraseñas de PDF guardadas en este celular: "+clavesPdf().length+" (desmarca para borrarlas)",type:"check",value:clavesPdf().length>0},
+],async o=>{if(o.__clavespdf===false)borrarClavesPdf();delete o.__clavespdf;config=Object.assign({},config,o);await db.doc("config/alertas").set(config);render();},[
+  {t:"Descargar mis datos (Excel)",fn:()=>descargarExcel()},
+  {t:"Copia de seguridad (archivo técnico)",fn:()=>$("#btnBackup").click()},
+  {t:"Restaurar copia de seguridad",fn:()=>importBackup()},
   {t:"Activar avisos",fn:()=>askNotif()},
   {t:"Enviar sugerencia o problema",fn:()=>{closeModal();abrirComentario();}},
   ...(window.__fb&&window.__fb.isAdmin?[{t:"👑 Administrar usuarios",fn:()=>{closeModal();abrirAdmin();}}]:[]),
@@ -1537,14 +1566,21 @@ function openPayModal(id,pre){
   $("#pCard").onchange=()=>{const t=tarjetas.find(x=>x.id===$("#pCard").value);if(t&&pre.monto==null)$("#pMonto").value=restanteDe(t);info();};
   $("#pMonto").oninput=info;info();
   $("#pCancel").onclick=closeFicha;
+  $("#pCard").addEventListener("change",()=>{$("#pSave").dataset.dup="";$("#pSave").textContent="Guardar pago";});$("#pMonto").addEventListener("input",()=>{$("#pSave").dataset.dup="";$("#pSave").textContent="Guardar pago";});
   $("#pSave").onclick=async()=>{
     const t=tarjetas.find(x=>x.id===$("#pCard").value);const m=Number($("#pMonto").value||0);if(!t||!(m>0)){toast("Escribe el monto pagado.");return;}
+    const f=$("#pFecha").value||iso(today());
+    const dup=(t.pagos||[]).find(x=>(pre.ref&&x.ref&&x.ref===pre.ref)||(Math.abs(Number(x.monto||0)-m)<0.5&&Math.abs((parseD(x.fecha)-parseD(f))/864e5)<=3));
+    if(dup&&$("#pSave").dataset.dup!=="1"){$("#pSave").dataset.dup="1";$("#pSave").textContent="Sí, registrarlo otra vez";
+      $("#pInfo").innerHTML=`<b style="color:var(--red)">⚠️ Este pago parece repetido:</b> ya tienes registrado ${money(dup.monto)} el ${fd(dup.fecha,true)} en esta tarjeta. Si es otro pago distinto, toca otra vez el botón; si no, toca Cancelar.`;return;}
     $("#pSave").disabled=true;
     try{
       const pagado=Math.round((pagadoDe(t)+(isPend(t)?m:0))*100)/100;
       const cubre=isPend(t)&&pagado+0.5>=Number(t.pagoSinIntereses||0);
-      const pagos=(t.pagos||[]).concat([{monto:m,fecha:$("#pFecha").value||iso(today()),comprobante:pre.asset?pre.asset.id:null}]);
+      const pagos=(t.pagos||[]).concat([{monto:m,fecha:f,comprobante:pre.asset?pre.asset.id:null,ref:pre.ref||null,registrado:Date.now()}]);
       const n=Object.assign({},t,{pagos,pagadoCiclo:isPend(t)?pagado:pagadoDe(t)});
+      if(t.saldoTotal!=null)n.saldoTotal=Math.max(0,Math.round((Number(t.saldoTotal||0)-m)*100)/100);
+      if(Number(t.limite)>0&&t.disponible!=null)n.disponible=Math.min(Number(t.limite),Math.round((Number(t.disponible||0)+m)*100)/100);
       if(cubre){n.estatus="Pagado";n.pagadoEl=$("#pFecha").value||iso(today());}
       if(pre.asset)n.documentos=(t.documentos||[]).concat([pre.asset]);
       delete n.id;await saveDoc("tarjetas",t.id,n);closeFicha();
@@ -1562,11 +1598,11 @@ async function runPagoImport(blob,mime,asset,hintId){
     const lista=tarjetas.map(t=>({id:t.id,nombre:t.nombre,banco:t.banco,pagoSinIntereses:t.pagoSinIntereses,estatus:t.estatus}));
     const prompt=`Este es un comprobante o captura de un PAGO a una tarjeta de crédito en México. Hoy es ${iso(today())}.
 Tarjetas registradas: ${JSON.stringify(lista)}
-Devuelve SOLO JSON: {"tarjetaId":id de la lista o null,"monto":número sin $ ni comas,"fecha":"YYYY-MM-DD" o null si no aparece,"resumen":"1 frase: qué tarjeta y cuánto se pagó"}`+(inp.text?"\n\nTEXTO:\n"+inp.text.slice(0,20000):"");
+Devuelve SOLO JSON: {"tarjetaId":id de la lista o null,"monto":número sin $ ni comas,"fecha":"YYYY-MM-DD" o null si no aparece,"referencia":"folio, número de referencia o clave de rastreo si aparece, si no null","resumen":"1 frase: qué tarjeta y cuánto se pagó"}`+(inp.text?"\n\nTEXTO:\n"+inp.text.slice(0,20000):"");
     const opts={modelTier:"default"};if(!inp.text)opts.images=inp.images;
     let v;try{v=await sample.json(prompt,opts);}catch(e){const r=await sample(prompt,opts);const m=(r.text||"").match(/\{[\s\S]*\}/);v=m?JSON.parse(m[0]):{};}
     if(asset)asset.tipo="Comprobante de pago";
-    openPayModal(v.tarjetaId||hintId,{monto:v.monto,fecha:v.fecha,resumen:v.resumen,asset});
+    openPayModal(v.tarjetaId||hintId,{monto:v.monto,fecha:v.fecha,resumen:v.resumen,ref:v.referencia?String(v.referencia).replace(/\s/g,""):null,asset});
   }catch(e){openPayModal(hintId,{asset});}
 }
 
@@ -1717,30 +1753,37 @@ function progress(msg){
   $("#fBody").innerHTML=`<h2 id="fTitle">Leyendo tu estado de cuenta</h2><p class="muted" id="progMsg">${esc(msg)}</p><div class="bar"><span style="width:100%;opacity:.5"></span></div>`;
   $("#ovF").classList.add("open","busy");
 }
+function clavesPdf(){try{return JSON.parse(localStorage.getItem("mt-clavespdf")||"[]");}catch(e){return [];}}
+function guardarClavePdf(c){try{const l=clavesPdf().filter(x=>x!==c);l.unshift(c);localStorage.setItem("mt-clavespdf",JSON.stringify(l.slice(0,6)));}catch(e){}}
+function borrarClavesPdf(){try{localStorage.removeItem("mt-clavespdf");}catch(e){}}
 function pedirClavePdf(mal){return new Promise(res=>{
   const ov=$("#ovF");const prev=$("#fBody").innerHTML;ov.classList.remove("busy");
   $("#fBody").innerHTML=`<h2 id="fTitle">Este PDF tiene contraseña</h2>
     <p style="margin:0">${mal?'<b style="color:var(--red)">Esa contraseña no abrió el archivo.</b> ':''}Escribe la contraseña del estado de cuenta. Normalmente el banco usa tu <b>RFC</b> (con o sin homoclave) o tu <b>fecha de nacimiento</b>; viene en el correo donde te lo mandaron.</p>
     <label for="pdfPw">Contraseña del PDF<input id="pdfPw" type="password" autocomplete="off" autocapitalize="characters"></label>
     <label class="check"><input type="checkbox" id="pdfVer" style="width:22px;height:22px;min-height:0"> Mostrar lo que escribo</label>
-    <p class="muted" style="margin:0;font-size:14px">La contraseña solo se usa para abrir el archivo en tu celular; no se guarda.</p>
+    <label class="check"><input type="checkbox" id="pdfRec" checked style="width:22px;height:22px;min-height:0"> Recordarla en este celular para la próxima vez</label>
+    <p class="muted" style="margin:0;font-size:14px">Se guarda solo en este aparato (nunca en internet) y solo sirve para abrir tus estados de cuenta. Puedes borrarla en Ajustes.</p>
     <div class="modal-foot"><button type="button" id="pdfNo">Cancelar</button><button type="button" class="primary" id="pdfSi">Abrir</button></div>`;
   ov.classList.add("open");setTimeout(()=>$("#pdfPw").focus(),50);
   $("#pdfVer").onchange=()=>{$("#pdfPw").type=$("#pdfVer").checked?"text":"password";};
   const fin=v=>{$("#fBody").innerHTML=prev;ov.classList.add("busy");res(v);};
-  $("#pdfSi").onclick=()=>{const v=$("#pdfPw").value.trim();if(!v){toast("Escribe la contraseña.");return;}fin(v);};
+  $("#pdfSi").onclick=()=>{const v=$("#pdfPw").value.trim();if(!v){toast("Escribe la contraseña.");return;}fin({clave:v,recordar:$("#pdfRec").checked});};
   $("#pdfPw").onkeydown=e=>{if(e.key==="Enter")$("#pdfSi").click();};
   $("#pdfNo").onclick=()=>fin(null);
 });}
 async function blobToInput(blob,mime){
   if((mime||blob.type||"").startsWith("image/")) return {text:"",images:[blob]};
   const lib=await ensurePdf();const buf=await blob.arrayBuffer();
-  let pdf=null,pw=undefined,intento=0;
+  let pdf=null,pw=undefined,intento=0;const guardadas=clavesPdf().slice();let nueva=null;
   while(!pdf){
     try{pdf=await lib.getDocument({data:buf.slice(0),password:pw}).promise;}
     catch(e){if(!e||e.name!=="PasswordException")throw e;
-      pw=await pedirClavePdf(intento++>0);if(pw===null){const x=new Error("cancelado");x.code="cancelado";throw x;}}
+      if(guardadas.length){pw=guardadas.shift();continue;}
+      const r=await pedirClavePdf(intento++>0);if(r===null){const x=new Error("cancelado");x.code="cancelado";throw x;}
+      pw=r.clave;nueva=r.recordar?r.clave:null;}
   }
+  if(nueva)guardarClavePdf(nueva);
   let text="";for(let i=1;i<=pdf.numPages&&text.length<90000;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();text+="\n[Página "+i+"]\n"+tc.items.map(x=>x.str).join(" ");}
   if(text.replace(/\s|\[Página \d+\]/g,"").length>400) return {text:text.slice(0,90000),images:[]};
   const imgs=[];for(let i=1;i<=Math.min(pdf.numPages,6);i++){const pg=await pdf.getPage(i);const vp=pg.getViewport({scale:1.6});const cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;imgs.push(await new Promise(r=>cv.toBlob(r,"image/jpeg",0.85)));}
@@ -1881,12 +1924,15 @@ function mdLite(s){
     else{if(inUl){h+="</ul>";inUl=false;}h+="<p>"+b+"</p>";}});
   if(inUl)h+="</ul>";return h;
 }
-function showAI(a){$("#aiOut").dataset.loaded="1";$("#aiOut").innerHTML=mdLite(a.texto)+`<p class="muted" style="font-size:12px">Generado el ${fd(a.fecha)}.</p>`;}
+function showAI(a){$("#aiOut").dataset.loaded="1";
+  const ult=Math.max(0,...tarjetas.flatMap(t=>(t.pagos||[]).map(x=>Number(x.registrado||0))),...tarjetas.map(t=>Date.parse((t.ultimoEstado||{}).leido||"")||0));
+  const viejo=a.ts?ult>a.ts:false;
+  $("#aiOut").innerHTML=(viejo?`<div class="alert amber" style="margin-bottom:10px"><span>Este análisis es de <b>antes de tus últimos pagos o estados de cuenta</b>. Toca <b>“Analizar mis finanzas”</b> para actualizarlo.</span></div>`:"")+mdLite(a.texto)+`<p class="muted" style="font-size:12px">Generado el ${fd(a.fecha)}.</p>`;}
 $("#btnAI").addEventListener("click",async()=>{
   const out=$("#aiOut");const btn=$("#btnAI");btn.disabled=true;out.innerHTML='<p class="muted">Claude está revisando tus tarjetas…</p>';
   try{
     const sample=await window.claude.use("sample");if(!sample){out.innerHTML='<p class="muted">El análisis con Claude no está disponible en esta vista.</p>';return;}
-    const data={hoy:iso(today()),tarjetas:tarjetas.map(t=>({tarjeta:t.nombre,banco:t.banco,estatus:t.estatus,fechaLimite:t.fechaLimite,pagoSinIntereses:t.pagoSinIntereses,pagoMinimo:t.pagoMinimo,saldoTotal:t.saldoTotal,limite:t.limite,condiciones:t.condiciones,alertasEstado:(t.ultimoEstado||{}).alertas})),
+    const data={hoy:iso(today()),tarjetas:tarjetas.map(t=>({tarjeta:t.nombre,banco:t.banco,estatus:t.estatus,fechaLimite:t.fechaLimite,pagoSinIntereses:t.pagoSinIntereses,yaPagadoEsteCiclo:pagadoDe(t),faltaPorPagar:isPend(t)?restanteDe(t):0,pagoMinimo:t.pagoMinimo,saldoTotal:t.saldoTotal,limite:t.limite,condiciones:t.condiciones,alertasEstado:(t.ultimoEstado||{}).alertas})),
       comprasAMeses:msi.filter(m=>msiRest(m)>0).map(m=>({tarjeta:cardName(m.tarjeta),compra:m.compra,mensualidad:m.mensualidad,pagosRestantes:msiRest(m),saldo:m.saldoPendiente})),proyeccionMensualidades:msiProjection(8)};
     const prompt=`Eres un asesor de finanzas personales en México, claro y directo, que habla en español sencillo. Analiza las tarjetas de crédito de esta persona con los datos JSON de abajo.
 Escribe en Markdown simple (títulos con ##, viñetas con -, negritas con **), máximo 350 palabras, con estas secciones:
@@ -1899,7 +1945,7 @@ Usa solo los datos dados; no inventes cifras. Termina con una línea recordando 
 DATOS:
 ${JSON.stringify(data)}`;
     const r=await sample(prompt,{modelTier:"complex",onText:({text})=>{out.innerHTML=mdLite(text);}});
-    const a={texto:r.text,fecha:iso(today())};config.analisis=a;
+    const a={texto:r.text,fecha:iso(today()),ts:Date.now()};config.analisis=a;
     try{await db.doc("config/alertas").set(Object.assign({},config));}catch(e){}
     showAI(a);
   }catch(e){out.innerHTML='<p class="muted">'+(e&&e.code==="rate_limited"?"Claude está ocupado. Intenta en unos minutos.":"No se pudo hacer el análisis. Intenta de nuevo.")+'</p>';}
