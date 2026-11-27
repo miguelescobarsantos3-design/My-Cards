@@ -386,6 +386,16 @@ label{font-size:15px;color:var(--ink);gap:6px}
 .prow .pchip{width:100%;padding-left:60px;margin-top:-6px}
 .dchip{font-size:14px;padding:4px 10px}
 .paybtn{min-height:44px;padding:8px 16px;font-size:16px;border-radius:12px}
+/* historial de pagos hechos */
+.hsum{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--gray-soft);border-radius:14px;padding:12px 14px;margin:4px 0 8px}
+.hsum b{font-size:22px}.hsum span{font-size:15px;color:var(--muted)}
+.hsum select{min-height:44px;font-size:16px;border-radius:12px;padding:6px 10px;max-width:100%}
+.hmes{font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin:14px 2px 2px;display:flex;justify-content:space-between}
+.hrow{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line)}
+.hrow:last-child{border-bottom:0}
+.hrow .hi{flex:1;min-width:0}.hrow .hi b{display:block;font-size:17px}.hrow .hi span{font-size:15px;color:var(--muted)}
+.hrow .hm{font-size:19px;font-weight:800;color:var(--green);white-space:nowrap}
+.hrow .hx{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 /* avisos */
 .alert{font-size:16px;padding:14px 16px;border-radius:16px}
 .revisar{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
@@ -546,6 +556,18 @@ html[data-size="grande"] .form{grid-template-columns:minmax(0,1fr)}
       </div>
     </div>
     <div class="plist" id="tbTarjetas"><div class="empty">Cargando tus tarjetas…</div></div>
+  </section>
+
+  <section class="card" id="secHist">
+    <div class="section-head">
+      <h2>Pagos que ya hice</h2>
+      <div class="filters seg" id="filtroHist">
+        <button type="button" data-h="mes" aria-pressed="true">Este mes</button>
+        <button type="button" data-h="ant" aria-pressed="false">Mes pasado</button>
+        <button type="button" data-h="all" aria-pressed="false">Todos</button>
+      </div>
+    </div>
+    <div id="histBox"><div class="empty">Cargando…</div></div>
   </section>
 
   <section class="card">
@@ -977,7 +999,9 @@ function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>
     ${al.length?`<div class="alerts">${al.map(z=>`<div class="alert ${z.n==="alta"?"red":z.n==="media"?"orange":"amber"}"><span>${esc(z.x)}</span></div>`).join("")}</div>`:""}
     <div class="cacts"><button type="button" class="primary" id="cdPay">Registrar pago</button><button type="button" id="cdUp">Subir estado de cuenta</button><button type="button" id="cdEdit">Editar datos de la tarjeta</button><button type="button" id="cdAll">Ver todo: beneficios, condiciones y documentos</button></div>`;
   box.querySelectorAll("[data-delpago]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return;}
-    const i=Number(b.dataset.delpago);const x=(t.pagos||[])[i];if(!x)return;const pagos=t.pagos.filter((_,k)=>k!==i);
+    await quitarPago(t,Number(b.dataset.delpago));});
+  $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);$("#cdEdit").onclick=()=>editCard(t.id);}
+async function quitarPago(t,i){const x=(t.pagos||[])[i];if(!x)return;const pagos=t.pagos.filter((_,k)=>k!==i);
     const enPeriodo=x.fecha>(t.fechaCorte||"");const pag=Math.max(0,Math.round((pagadoDe(t)-(enPeriodo?Number(x.monto||0):0))*100)/100);
     const n=Object.assign({},t,{pagos,pagadoCiclo:pag});
     if(t.saldoEstado!=null&&t.fechaCorte){const despues=pagos.filter(z=>z.fecha>t.fechaCorte).reduce((a,z)=>a+Number(z.monto||0),0);n.saldoTotal=Math.max(0,Math.round((Number(t.saldoEstado)-despues)*100)/100);}
@@ -985,8 +1009,34 @@ function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>
     if(Number(t.limite)>0&&n.saldoTotal!=null)n.disponible=Math.max(0,Math.round((Number(t.limite)-Number(n.saldoTotal))*100)/100);
     else if(t.disponible!=null)n.disponible=Math.max(0,Math.round((Number(t.disponible||0)-Number(x.monto||0))*100)/100);
     if(Number(t.pagoSinIntereses||0)>0)n.estatus=pag+0.5>=Number(t.pagoSinIntereses)?"Pagado":"Pendiente";
-    delete n.id;await saveDoc("tarjetas",t.id,n);toast("Pago quitado");});
-  $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);$("#cdEdit").onclick=()=>editCard(t.id);}
+    delete n.id;await saveDoc("tarjetas",t.id,n);toast("Pago quitado");}
+let fHist="mes",fHistCard="";
+function renderHist(){const box=$("#histBox");if(!box)return;
+  const hoy=today(),ym=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  const esteMes=ym(hoy),mesAnt=ym(new Date(hoy.getFullYear(),hoy.getMonth()-1,1));
+  let all=[];tarjetas.forEach(t=>(t.pagos||[]).forEach((x,i)=>all.push({t,x,i})));
+  if(!all.length){box.innerHTML='<div class="empty">Aún no has registrado pagos. Cuando pagues una tarjeta, toca <b>“Ya pagué una tarjeta”</b> y aquí verás la lista.</div>';return;}
+  let ls=all.filter(o=>!fHistCard||o.t.id===fHistCard);
+  if(fHist==="mes")ls=ls.filter(o=>(o.x.fecha||"").slice(0,7)===esteMes);
+  else if(fHist==="ant")ls=ls.filter(o=>(o.x.fecha||"").slice(0,7)===mesAnt);
+  ls.sort((a,b)=>(b.x.fecha||"").localeCompare(a.x.fecha||"")||Number(b.x.registrado||0)-Number(a.x.registrado||0));
+  const tot=ls.reduce((s,o)=>s+Number(o.x.monto||0),0);
+  const cards=[...new Map(all.map(o=>[o.t.id,o.t])).values()].sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  const titulo=fHist==="mes"?"este mes":fHist==="ant"?"el mes pasado":"en total";
+  let h=`<div class="hsum"><div><span>Pagaste ${titulo}</span><b class="num" style="display:block">${money(tot)}</b><span>${ls.length===1?"1 pago":ls.length+" pagos"}</span></div>
+    <select id="histCard" aria-label="Filtrar por tarjeta"><option value="">Todas las tarjetas</option>${cards.map(t=>`<option value="${esc(t.id)}" ${t.id===fHistCard?"selected":""}>${esc(t.nombre)}</option>`).join("")}</select></div>`;
+  if(!ls.length)h+=`<div class="empty" style="padding:12px">No hay pagos registrados ${titulo==="en total"?"con este filtro":titulo}.</div>`;
+  else{let mes="";const sub={};ls.forEach(o=>{const k=(o.x.fecha||"").slice(0,7);sub[k]=(sub[k]||0)+Number(o.x.monto||0);});
+    ls.forEach(o=>{const k=(o.x.fecha||"").slice(0,7);
+      if(fHist==="all"&&k!==mes){mes=k;const d=parseD(k+"-01");h+=`<div class="hmes"><span>${d?["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][d.getMonth()]+" "+d.getFullYear():"Sin fecha"}</span><span>${money(sub[k])}</span></div>`;}
+      const doc=o.x.comprobante?(o.t.documentos||[]).find(d=>d.id===o.x.comprobante):null;
+      h+=`<div class="hrow">${bankAv(o.t)}<div class="hi"><b>${esc(o.t.nombre)}</b><span>${fd(o.x.fecha,true)}${o.x.ref?" · Ref. "+esc(o.x.ref):""}</span></div><div style="text-align:right"><div class="hm num">${money(o.x.monto)}</div><div class="hx">${doc&&doc.url?`<a class="btn small" href="${esc(doc.url)}" target="_blank" rel="noopener">Comprobante</a>`:""}<button type="button" class="small danger" data-hdel="${esc(o.t.id)}|${o.i}">Quitar</button></div></div></div>`;});}
+  box.innerHTML=h;
+  $("#histCard").onchange=e=>{fHistCard=e.target.value;renderHist();};
+  box.querySelectorAll("[data-hdel]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return;}
+    const [id,i]=b.dataset.hdel.split("|");const t=tarjetas.find(x=>x.id===id);if(t)await quitarPago(t,Number(i));});}
+document.addEventListener("click",e=>{const b=e.target.closest("#filtroHist button[data-h]");if(!b)return;fHist=b.dataset.h;
+  document.querySelectorAll("#filtroHist button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderHist();});
 function carMove(dir){const c=$("#carousel");if(!c)return;const w=(c.querySelector(".plastic")||{}).offsetWidth||260;c.scrollBy({left:dir*(w+12),behavior:"smooth"});}
 function carArrows(){const c=$("#carousel");if(!c)return;const max=c.scrollWidth-c.clientWidth-4;
   document.querySelector(".carnav.prev").disabled=c.scrollLeft<=4;document.querySelector(".carnav.next").disabled=c.scrollLeft>=max;}
@@ -1015,6 +1065,7 @@ function cardName(id){const t=tarjetas.find(x=>x.id===id);return t?t.nombre:id;}
 
 /* ---------- render ---------- */
 function render(){
+  try{renderHist();}catch(e){console.warn(e);}
   const pend=tarjetas.filter(isPend).sort((a,b)=>(a.fechaLimite||"").localeCompare(b.fechaLimite||""));
   // alertas
   const al=[];
