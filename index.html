@@ -1001,7 +1001,9 @@ function renderCardDetail(){const box=$("#cardDetail");const t=tarjetas.find(x=>
   box.querySelectorAll("[data-delpago]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return;}
     await quitarPago(t,Number(b.dataset.delpago));});
   $("#cdPay").onclick=()=>openPayModal(t.id);$("#cdUp").onclick=()=>pickFile(t.id,"estado");$("#cdAll").onclick=()=>openFicha(t.id);$("#cdEdit").onclick=()=>editCard(t.id);}
-async function quitarPago(t,i){const x=(t.pagos||[])[i];if(!x)return;const pagos=t.pagos.filter((_,k)=>k!==i);
+async function quitarPago(t,i){const x=(t.pagos||[])[i];if(!x)return;
+  if(x.origen==="estado"){const n0=Object.assign({},t,{pagos:t.pagos.filter((_,k)=>k!==i)});delete n0.id;await saveDoc("tarjetas",t.id,n0);toast("Pago quitado del historial");return;}
+const pagos=t.pagos.filter((_,k)=>k!==i);
     const enPeriodo=x.fecha>(t.fechaCorte||"");const pag=Math.max(0,Math.round((pagadoDe(t)-(enPeriodo?Number(x.monto||0):0))*100)/100);
     const n=Object.assign({},t,{pagos,pagadoCiclo:pag});
     if(t.saldoEstado!=null&&t.fechaCorte){const despues=pagos.filter(z=>z.fecha>t.fechaCorte).reduce((a,z)=>a+Number(z.monto||0),0);n.saldoTotal=Math.max(0,Math.round((Number(t.saldoEstado)-despues)*100)/100);}
@@ -1015,7 +1017,7 @@ function renderHist(){const box=$("#histBox");if(!box)return;
   const hoy=today(),ym=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
   const esteMes=ym(hoy),mesAnt=ym(new Date(hoy.getFullYear(),hoy.getMonth()-1,1));
   let all=[];tarjetas.forEach(t=>(t.pagos||[]).forEach((x,i)=>all.push({t,x,i})));
-  if(!all.length){box.innerHTML='<div class="empty">Aún no has registrado pagos. Cuando pagues una tarjeta, toca <b>“Ya pagué una tarjeta”</b> y aquí verás la lista.</div>';return;}
+  if(!all.length){box.innerHTML='<div class="empty">Aún no hay pagos guardados. Toca <b>“Ya pagué una tarjeta”</b> cuando pagues, o sube tus estados de cuenta: los pagos que traen aparecen aquí solos.</div>';return;}
   let ls=all.filter(o=>!fHistCard||o.t.id===fHistCard);
   if(fHist==="mes")ls=ls.filter(o=>(o.x.fecha||"").slice(0,7)===esteMes);
   else if(fHist==="ant")ls=ls.filter(o=>(o.x.fecha||"").slice(0,7)===mesAnt);
@@ -1030,7 +1032,9 @@ function renderHist(){const box=$("#histBox");if(!box)return;
     ls.forEach(o=>{const k=(o.x.fecha||"").slice(0,7);
       if(fHist==="all"&&k!==mes){mes=k;const d=parseD(k+"-01");h+=`<div class="hmes"><span>${d?["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"][d.getMonth()]+" "+d.getFullYear():"Sin fecha"}</span><span>${money(sub[k])}</span></div>`;}
       const doc=o.x.comprobante?(o.t.documentos||[]).find(d=>d.id===o.x.comprobante):null;
-      h+=`<div class="hrow">${bankAv(o.t)}<div class="hi"><b>${esc(o.t.nombre)}</b><span>${fd(o.x.fecha,true)}${o.x.ref?" · Ref. "+esc(o.x.ref):""}</span></div><div style="text-align:right"><div class="hm num">${money(o.x.monto)}</div><div class="hx">${doc&&doc.url?`<a class="btn small" href="${esc(doc.url)}" target="_blank" rel="noopener">Comprobante</a>`:""}<button type="button" class="small danger" data-hdel="${esc(o.t.id)}|${o.i}">Quitar</button></div></div></div>`;});}
+      h+=`<div class="hrow">${bankAv(o.t)}<div class="hi"><b>${esc(o.t.nombre)}</b><span>${fd(o.x.fecha,true)}${o.x.ref?" · Ref. "+esc(o.x.ref):""}${o.x.origen==="estado"?" · del estado de cuenta":""}</span></div><div style="text-align:right"><div class="hm num">${money(o.x.monto)}</div><div class="hx">${doc&&doc.url?`<a class="btn small" href="${esc(doc.url)}" target="_blank" rel="noopener">Comprobante</a>`:""}<button type="button" class="small danger" data-hdel="${esc(o.t.id)}|${o.i}">Quitar</button></div></div></div>`;});}
+  const sin=tarjetas.filter(t=>!(t.pagos||[]).length).map(t=>t.nombre).sort();
+  if(sin.length&&!fHistCard)h+=`<p class="muted" style="margin:12px 2px 0;font-size:15px">Sin pagos guardados: <b>${esc(sin.join(", "))}</b>. Sube su estado de cuenta más reciente con <b>“Me llegó mi estado de cuenta”</b> y sus pagos aparecen aquí solos.</p>`;
   box.innerHTML=h;
   $("#histCard").onchange=e=>{fHistCard=e.target.value;renderHist();};
   box.querySelectorAll("[data-hdel]").forEach(b=>b.onclick=async()=>{if(b.dataset.ok!=="1"){b.dataset.ok="1";b.textContent="¿Seguro?";return;}
@@ -1915,10 +1919,12 @@ Si la tarjeta registrada trae "instrucciones", síguelas (por ejemplo, no contar
 Devuelve SOLO un objeto JSON válido con esta forma (números sin $ ni comas; null si no aparece; no inventes):
 {"tarjetaId":string|null,"banco":string,"producto":string,"terminacion":"últimos 3-4 dígitos","tipo":"credito"|"cargo","fechaCorte":"YYYY-MM-DD","fechaLimite":"YYYY-MM-DD","pagoSinIntereses":número,"pagoMinimo":número|null,"saldoTotal":número (saldo deudor total, incluye lo que falta de compras a meses),"limite":número|null,"disponible":número|null,"tasaAnual":número|null,"cat":número|null,"anualidad12m":número|null,"comisiones12m":número|null,"intereses12m":número|null,"interesesPeriodo":número|null,"comisionesPeriodo":número|null,
 "comprasMeses":[{"compra":"comercio (fecha de compra)","mensualidad":número,"pagoActual":número (mensualidades ya cobradas incluyendo la de este corte),"totalPagos":número,"saldoPendiente":número (lo que falta después de este corte),"montoOriginal":número}],
+"pagos":[{"fecha":"YYYY-MM-DD","monto":número,"concepto":"texto como aparece (PAGO POR TRANSFERENCIA, SU PAGO GRACIAS…)"}],
 "cargosFijos":[{"concepto":"nombre corto (Netflix, Telmex, Spotify, Google One, gimnasio, seguro…)","monto":número,"frecuencia":"mensual"|"anual"}],
 "resumen":"2 frases sencillas: cuánto pagar y antes de cuándo, y lo más importante",
 "alertas":[{"nivel":"alta"|"media"|"baja","texto":"frase corta y concreta"}]}
 cargosFijos: solo cargos que se repiten solos (suscripciones, servicios domiciliados, seguros, membresías), del titular; no incluyas compras normales ni mensualidades de compras a meses. Si el nombre o el monto sugieren que es anual (por ejemplo, un plan de Google One, Amazon Prime o una anualidad), marca "anual". Si no hay, devuelve [].
+pagos: todos los PAGOS o abonos que el tarjetahabiente hizo a la tarjeta dentro del periodo (transferencias, pagos en ventanilla, domiciliados, "su pago gracias"). No incluyas devoluciones de compras, bonificaciones, cashback ni ajustes del banco. Si no hay, devuelve [].
 Alertas (máximo 5): intereses o comisiones cobradas en el periodo, planes de pago con comisión, cargos repetidos o que parezcan no reconocidos, suscripciones duplicadas, uso alto de la línea, fecha límite muy cercana. Para tarjetas de cargo (como Amex Gold), pagoSinIntereses es el total a pagar.`+(inp.text?"\n\nTEXTO DEL DOCUMENTO:\n"+inp.text:"\n\nEl documento va en las imágenes adjuntas.");
     const opts={modelTier:"complex"};if(!inp.text) opts.images=inp.images;
     let v;
@@ -1944,6 +1950,13 @@ function modoImport(t,v){
   const ps=(t.pagos||[]).filter(x=>x.fecha&&x.fecha>fc);const pagos=ps.reduce((s,x)=>s+Number(x.monto||0),0);
   return {tipo,pagos:Math.round(pagos*100)/100,lista:ps.map(x=>money(x.monto)+" el "+fd(x.fecha)).join(", ")};
 }
+/* agrega al historial los pagos que trae el estado de cuenta, sin repetir los que ya estaban; no cambia saldos */
+function pagosDelEstado(v){return (Array.isArray(v.pagos)?v.pagos:[]).map(x=>({monto:Math.round(Number(x&&x.monto||0)*100)/100,fecha:String(x&&x.fecha||"").slice(0,10),concepto:String(x&&x.concepto||"")}))
+  .filter(x=>x.monto>0&&/^\d{4}-\d{2}-\d{2}$/.test(x.fecha)&&(!v.fechaCorte||x.fecha<=v.fechaCorte));}
+function mezclarPagos(lista,v){const out=(lista||[]).slice();let n=0;
+  pagosDelEstado(v).forEach(p=>{const ya=out.some(x=>Math.abs(Number(x.monto||0)-p.monto)<0.5&&Math.abs((parseD(x.fecha)-parseD(p.fecha))/864e5)<=3);
+    if(!ya){out.push({monto:p.monto,fecha:p.fecha,comprobante:null,ref:null,registrado:Date.now(),origen:"estado",concepto:p.concepto});n++;}});
+  out.sort((a,b)=>String(a.fecha||"").localeCompare(String(b.fecha||"")));return {pagos:out,nuevos:n};}
 function reviewImport(v,asset,hintId){
   const sel=guessCard(v,hintId);const nm=(v.banco||"")+" "+(v.producto||"")+(v.terminacion?" ·"+v.terminacion:"");
   const m=v.comprasMeses||[];
@@ -1954,6 +1967,7 @@ function reviewImport(v,asset,hintId){
     <div class="kv"><div><span>Fecha límite</span><b>${fd(v.fechaLimite,true)}</b></div><div><span>Pago sin intereses</span><b>${money(v.pagoSinIntereses)}</b></div><div><span>Pago mínimo</span><b>${v.pagoMinimo==null?"—":money(v.pagoMinimo)}</b></div>
       <div><span>Saldo total</span><b>${money(v.saldoTotal)}</b></div><div><span>Límite</span><b>${v.limite==null?"—":money(v.limite)}</b></div><div><span>Tasa anual</span><b>${v.tipo==="cargo"?"Cargo":pct(v.tasaAnual)}</b></div></div>
     <div id="impModo"></div>
+    ${pagosDelEstado(v).length?`<p class="muted" style="margin:0">💳 Pagos que hiciste en este periodo: ${pagosDelEstado(v).map(x=>money(x.monto)+" el "+fd(x.fecha)).join(" · ")}. Se guardan en <b>Pagos que ya hice</b>.</p>`:""}
     <p class="muted" style="margin:0">${m.length} compras a meses${m.length?" · "+money(m.reduce((s,x)=>s+Number(x.mensualidad||0),0))+" al mes":""}.</p>
     ${(v.cargosFijos||[]).length?`<div class="fijos"><b>Cargos que se repiten</b><small class="muted">Marca los que se cobran cada mes: se suman a “Lo que viene”.</small>${v.cargosFijos.map((x,i)=>`<label class="check"><input type="checkbox" data-fijo="${i}" ${x.frecuencia!=="anual"?"checked":""}> ${esc(x.concepto||"Cargo")} · ${money(x.monto)}${x.frecuencia==="anual"?" <span class=\"muted\">(parece anual)</span>":""}</label>`).join("")}</div>`:""}
     ${(v.alertas||[]).length?`<div class="alist">${v.alertas.map(z=>`<div><span class="chip ${NIV[z.nivel]?NIV[z.nivel].c:"gray"}">${NIV[z.nivel]?NIV[z.nivel].t:"Info"}</span><span>${esc(z.texto)}</span></div>`).join("")}</div>`:""}
@@ -1976,7 +1990,7 @@ function reviewImport(v,asset,hintId){
       const md=modoImport(isNew?null:old,v);
       const hist=(old.historial||[]).filter(h=>h.fechaCorte!==v.fechaCorte).concat([{fechaCorte:v.fechaCorte,fechaLimite:v.fechaLimite,pagoSinIntereses:Number(v.pagoSinIntereses||0),saldoTotal:v.saldoTotal==null?null:Number(v.saldoTotal),documento:asset?asset.nombre:"",leido:iso(today())}]).sort((a,b)=>String(b.fechaCorte).localeCompare(String(a.fechaCorte))).slice(0,24);
       if(md.tipo==="viejo"){
-        const nv=Object.assign({},old,{historial:hist,documentos:(old.documentos||[]).concat(asset?[asset]:[])});
+        const nv=Object.assign({},old,{historial:hist,pagos:mezclarPagos(old.pagos,v).pagos,documentos:(old.documentos||[]).concat(asset?[asset]:[])});
         const c0=Object.assign({},old.condiciones||{});["tasaAnual","cat","anualidad12m","comisiones12m","intereses12m"].forEach(k=>{if(c0[k]==null&&v[k]!=null&&v[k]!=="")c0[k]=Number(v[k]);});nv.condiciones=c0;
         delete nv.id;await saveDoc("tarjetas",id,nv);closeFicha();toast("Guardado en el historial de "+old.nombre+". Tus datos actuales no cambiaron.");return;}
       const pago=Number(v.pagoSinIntereses||0);const yaPag=md.pagos;
@@ -1988,6 +2002,7 @@ function reviewImport(v,asset,hintId){
         estatus:pago<=0?"Sin saldo":(yaPag+0.5>=pago?"Pagado":"Pendiente"),estimado:false,condiciones:c,pagadoCiclo:Math.round(yaPag*100)/100,historial:hist,
         ultimoEstado:{resumen:v.resumen||"",alertas:v.alertas||[],fechaCorte:v.fechaCorte,documento:asset?asset.nombre:"",leido:iso(today())},
         documentos:(old.documentos||[]).concat(asset?[asset]:[])});
+      n.pagos=mezclarPagos(old.pagos,v).pagos;
       delete n.id;delete n.contratoAnalisis;
       await saveDoc("tarjetas",id,n);
       const viejas=msi.filter(x=>x.tarjeta===id);
